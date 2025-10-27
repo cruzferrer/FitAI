@@ -1,35 +1,56 @@
-import { Tabs } from 'expo-router';
 import React from 'react';
+import { Tabs } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import COLORS from '../../constants/theme'; // Importamos el objeto COLORS
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+// Este componente define el navegador de pestañas inferiores para la app principal
+const TabLayout: React.FC = () => {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: COLORS.accent, // Color activo del ícono
+        tabBarInactiveTintColor: COLORS.secondaryText, // Color inactivo
+        tabBarStyle: {
+          backgroundColor: COLORS.background, // Fondo de la barra
+          borderTopColor: COLORS.separator, // Línea divisoria superior
+        },
+        headerShown: false, // Ocultamos el header por defecto para controlarlo a nivel de pantalla
+      }}
+    >
+      {/* Pestaña 1: Inicio / Rutina Actual */}
       <Tabs.Screen
-        name="index"
+        name="index" // Corresponde al archivo app/(tabs)/index.tsx
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Rutina',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="dumbbell" size={24} color={color} />
+          ),
         }}
       />
+      
+      {/* Pestaña 2: Historial / Progreso */}
       <Tabs.Screen
-        name="explore"
+        name="progress" // Tendrás que crear app/(tabs)/progress.tsx
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Progreso',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="chart-bar" size={24} color={color} />
+          ),
+        }}
+      />
+
+      {/* Pestaña 3: Chatbot / Perfil */}
+      <Tabs.Screen
+        name="chat" // Tendrás que crear app/(tabs)/chat.tsx
+        options={{
+          title: 'Chatbot',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="robot" size={24} color={color} />
+          ),
         }}
       />
     </Tabs>
   );
-}
+};
+
+export default TabLayout;

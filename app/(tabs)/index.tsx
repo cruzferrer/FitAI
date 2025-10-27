@@ -1,98 +1,117 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router'; // <-- Importar useRouter
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import {COLORS} from '@/constants/theme';
+import HomeHeader from '@/components/Headers/HomeHeader';
+import RoutineStartCard from '@/components/Cards/RoutineStartCard'; // <-- Nuevo componente
+import { RUTINA_PERIODIZADA } from '@/data/RutinaData'; 
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const HomeScreen: React.FC = () => {
+    const router = useRouter(); // <-- Inicializar Router
+    
+    // Asumimos Semana 1 como la actual
+    const semanaActual = RUTINA_PERIODIZADA[0];
+    const diaActual = semanaActual.dias[0]; 
+    const proximosDias = semanaActual.dias.slice(1); // Días 2, 3, 4...
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
+    const handleSearch = () => Alert.alert("Búsqueda", "Funcionalidad de búsqueda pendiente.");
+    const handleNotifications = () => Alert.alert("Notificaciones", "Mostrando notificaciones.");
+    
+   
+    const handleStartWorkout = () => {
+        // Corrección: Forzamos el tipo a 'any' en el argumento para evitar el error de tipado de la URL
+        router.push(
+            `/workout?day=${encodeURIComponent(diaActual.dia_entrenamiento)}` as any
+        );
+    };
+
+    const handleViewNextWorkout = (diaName: string) => {
+        Alert.alert("Vista Previa", `Navegar a la vista previa de: ${diaName}`);
+        // router.push(`/workout-preview?day=${encodeURIComponent(diaName)}`);
+    }
+
+    return (
+        <SafeAreaView style={styles.safeArea}>
+            
+            <HomeHeader 
+                onSearchPress={handleSearch} 
+                onNotificationsPress={handleNotifications} 
             />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
-}
+            
+            <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.contentContainer}
+            >
+                {/* TARJETA DE INICIO DE LA RUTINA ACTUAL */}
+                <RoutineStartCard
+                    dia={diaActual.dia_entrenamiento}
+                    fase={semanaActual.fase}
+                    onPress={handleStartWorkout}
+                />
+                
+                {/* PRÓXIMOS ENTRENAMIENTOS */}
+                <Text style={styles.nextTitle}>— Tus Próximos Entrenamientos —</Text>
+                
+                <View style={styles.nextList}>
+                    {proximosDias.map((dia, index) => (
+                        <TouchableOpacity 
+                            key={index} 
+                            style={styles.nextDayCard}
+                            onPress={() => handleViewNextWorkout(dia.dia_entrenamiento)}
+                        >
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <MaterialCommunityIcons name="weight-lifter" size={20} color={COLORS.secondaryText} style={{ marginRight: 10 }} />
+                                <Text style={styles.nextDayText}>{dia.dia_entrenamiento}</Text>
+                            </View>
+                            <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.secondaryText} />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+                
+            </ScrollView>
+            
+        </SafeAreaView>
+    );
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+    safeArea: {
+        flex: 1,
+        backgroundColor: COLORS.background,
+    },
+    scrollView: { 
+        flex: 1, 
+    },
+    contentContainer: {
+        paddingHorizontal: 20, 
+        paddingBottom: 40,
+    },
+    nextTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.secondaryText,
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    nextList: {
+        width: '100%',
+    },
+    nextDayCard: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: COLORS.inputBackground,
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 8,
+    },
+    nextDayText: {
+        fontSize: 16,
+        color: COLORS.primaryText,
+        fontWeight: '500',
+    },
 });
+
+export default HomeScreen;

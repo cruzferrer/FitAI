@@ -1,0 +1,1552 @@
+{
+  "rutina_periodizada": [
+    {
+      "semana": 1,
+      "fase": "Acumulación - Volumen Base",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Upper A",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Peso estimado: ~88-92 kg. La última serie debe sentirse como un 7 sobre 10."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Remo con Barra (Pendlay)",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Técnica explosiva pero controlada."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Militar con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Rango de movimiento completo."
+                },
+                {
+                  "nombre": "Elevaciones Laterales",
+                  "series": "3",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Controlar la fase excéntrica."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl de Bíceps con Barra",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 3",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Extensiones de Tríceps en Polea",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 3",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 2 - Lower A",
+          "grupos": [
+            {
+              "grupo_muscular": "Piernas (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Trasera",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Peso estimado: ~100-105 kg. Mantener la técnica."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca con Pausa",
+                  "series": "3",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Pausa de 1-2 segundos en el pecho. Enfocado en técnica."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Cadena Posterior (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto Rumano (RDL)",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Foco en el estiramiento del isquiotibial."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Prensa de Piernas",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Profundidad controlada."
+                },
+                {
+                  "nombre": "Elevación de Gemelos",
+                  "series": "4",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 3",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 3 - Upper B",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Inclinado con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "8",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Enfocado en el pectoral superior."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas o Jalón al Pecho",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Si haces dominadas, añade lastre si es necesario."
+                },
+                {
+                  "nombre": "Remo en Máquina (Pecho Apoyado)",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Aprieta las escápulas en cada repetición."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Face Pulls",
+                  "series": "3",
+                  "repeticiones": "15-20",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Salud del manguito rotador."
+                },
+                {
+                  "nombre": "Aperturas en Peck Deck o con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 3",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl Martillo",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 3",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Press Francés con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 3",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 4 - Lower B",
+          "grupos": [
+            {
+              "grupo_muscular": "Cadena Posterior (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto con Barra Trap",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Peso estimado: ~115-120 kg. Alternativa: Peso Muerto desde bloques."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Frontal o Goblet Squat",
+                  "series": "3",
+                  "repeticiones": "8",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Énfasis en la verticalidad del torso."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca (Spoto Press)",
+                  "series": "4",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 6",
+                  "nota": "Parada a 1-2 cm del pecho. Muy ligero, enfocado en control."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Zancadas con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "10-12 por pierna",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Estabilidad y control."
+                },
+                {
+                  "nombre": "Curl Femoral Tumbado",
+                  "series": "3",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 3",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Core",
+              "ejercicios": [
+                {
+                  "nombre": "Plancha Abdominal",
+                  "series": "3",
+                  "repeticiones": "Máx. tiempo",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "semana": 2,
+      "fase": "Acumulación - Progresión de Volumen",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Upper A",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7.5",
+                  "nota": "Aumenta ligeramente el peso respecto a la semana 1. ~91-95 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Remo con Barra (Pendlay)",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 2-3",
+                  "nota": "Mismo peso que la semana 1, pero más cerca del fallo."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Militar con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Elevaciones Laterales",
+                  "series": "4",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 2-3",
+                  "nota": "Añadimos una serie."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl de Bíceps con Barra",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Extensiones de Tríceps en Polea",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 2 - Lower A",
+          "grupos": [
+            {
+              "grupo_muscular": "Piernas (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Trasera",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7.5",
+                  "nota": "Aumenta ligeramente el peso. ~105-110 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca con Pausa",
+                  "series": "3",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 7.5",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Cadena Posterior (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto Rumano (RDL)",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 2-3",
+                  "nota": "Añadimos una serie."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Prensa de Piernas",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Elevación de Gemelos",
+                  "series": "4",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 3 - Upper B",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Inclinado con Mancuernas",
+                  "series": "4",
+                  "repeticiones": "8",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Añadimos una serie."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas o Jalón al Pecho",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Remo en Máquina (Pecho Apoyado)",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Face Pulls",
+                  "series": "4",
+                  "repeticiones": "15-20",
+                  "carga_notacion": "RIR 2",
+                  "nota": "Añadimos una serie."
+                },
+                {
+                  "nombre": "Aperturas en Peck Deck o con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl Martillo",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Press Francés con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 4 - Lower B",
+          "grupos": [
+            {
+              "grupo_muscular": "Cadena Posterior (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto con Barra Trap",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7.5",
+                  "nota": "Aumenta ligeramente el peso. ~120-125 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Frontal o Goblet Squat",
+                  "series": "3",
+                  "repeticiones": "8",
+                  "carga_notacion": "RPE 7.5",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca (Spoto Press)",
+                  "series": "4",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 6.5",
+                  "nota": "Misma carga, pero se sentirá más fácil."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Zancadas con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "10-12 por pierna",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Curl Femoral Tumbado",
+                  "series": "4",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 2",
+                  "nota": "Añadimos una serie."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Core",
+              "ejercicios": [
+                {
+                  "nombre": "Elevaciones de Piernas Colgado",
+                  "series": "3",
+                  "repeticiones": "10-15",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "semana": 3,
+      "fase": "Intensificación - Aumento de Carga",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Upper A",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca",
+                  "series": "4",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 8",
+                  "nota": "Peso mayor, menos repeticiones por serie. ~96-100 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Remo con Barra (Pendlay)",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Militar con Mancuernas",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 2",
+                  "nota": "Añadimos una serie."
+                },
+                {
+                  "nombre": "Elevaciones Laterales",
+                  "series": "4",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl de Bíceps con Barra",
+                  "series": "4",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Extensiones de Tríceps en Polea",
+                  "series": "4",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 2 - Lower A",
+          "grupos": [
+            {
+              "grupo_muscular": "Piernas (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Trasera",
+                  "series": "4",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 8",
+                  "nota": "Peso mayor, menos repeticiones por serie. ~110-114 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca con Pausa",
+                  "series": "3",
+                  "repeticiones": "3",
+                  "carga_notacion": "RPE 8",
+                  "nota": "Más pesado, menos repeticiones."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Cadena Posterior (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto Rumano (RDL)",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Prensa de Piernas",
+                  "series": "4",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Elevación de Gemelos",
+                  "series": "4",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 3 - Upper B",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Inclinado con Mancuernas",
+                  "series": "4",
+                  "repeticiones": "8",
+                  "carga_notacion": "RPE 8",
+                  "nota": "Aumentar carga."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas o Jalón al Pecho",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": "Empieza a empujar la intensidad."
+                },
+                {
+                  "nombre": "Remo en Máquina (Pecho Apoyado)",
+                  "series": "4",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Face Pulls",
+                  "series": "4",
+                  "repeticiones": "15-20",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Aperturas en Peck Deck o con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl Martillo",
+                  "series": "4",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Press Francés con Mancuernas",
+                  "series": "4",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 4 - Lower B",
+          "grupos": [
+            {
+              "grupo_muscular": "Cadena Posterior (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto con Barra Trap",
+                  "series": "3",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 8",
+                  "nota": "Más pesado, menos repeticiones. ~128-132 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Frontal o Goblet Squat",
+                  "series": "3",
+                  "repeticiones": "6",
+                  "carga_notacion": "RPE 8",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca (Larsen Press - sin pies)",
+                  "series": "4",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Cambio de variante para reducir estrés sistémico."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Zancadas con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "10-12 por pierna",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Curl Femoral Tumbado",
+                  "series": "4",
+                  "repeticiones": "12-15",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Core",
+              "ejercicios": [
+                {
+                  "nombre": "Plancha Abdominal",
+                  "series": "3",
+                  "repeticiones": "Máx. tiempo",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "semana": 4,
+      "fase": "Intensificación - Pico de Carga",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Upper A",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca",
+                  "series": "3",
+                  "repeticiones": "3",
+                  "carga_notacion": "RPE 8.5",
+                  "nota": "Carga pre-máxima. ~101-105 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Remo con Barra (Pendlay)",
+                  "series": "4",
+                  "repeticiones": "5-7",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Militar con Mancuernas",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": "Carga alta."
+                },
+                {
+                  "nombre": "Elevaciones Laterales",
+                  "series": "4",
+                  "repeticiones": "10-15",
+                  "carga_notacion": "RIR 1",
+                  "nota": "Llevar cerca del fallo."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl de Bíceps con Barra",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Extensiones de Tríceps en Polea",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 2 - Lower A",
+          "grupos": [
+            {
+              "grupo_muscular": "Piernas (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Trasera",
+                  "series": "3",
+                  "repeticiones": "3",
+                  "carga_notacion": "RPE 8.5",
+                  "nota": "Carga pre-máxima. ~115-119 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca con Pausa",
+                  "series": "3",
+                  "repeticiones": "2",
+                  "carga_notacion": "RPE 8.5",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Cadena Posterior (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto Rumano (RDL)",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Prensa de Piernas",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Elevación de Gemelos",
+                  "series": "4",
+                  "repeticiones": "10-15",
+                  "carga_notacion": "RIR 1",
+                  "nota": "Buscar el fallo o casi."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 3 - Upper B",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Inclinado con Mancuernas",
+                  "series": "4",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RPE 8.5",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas o Jalón al Pecho",
+                  "series": "4",
+                  "repeticiones": "5-7",
+                  "carga_notacion": "RIR 1",
+                  "nota": "Máximo esfuerzo."
+                },
+                {
+                  "nombre": "Remo en Máquina (Pecho Apoyado)",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Face Pulls",
+                  "series": "3",
+                  "repeticiones": "15-20",
+                  "carga_notacion": "RIR 2",
+                  "nota": "Volumen reducido para recuperación."
+                },
+                {
+                  "nombre": "Aperturas en Peck Deck o con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl Martillo",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Press Francés con Mancuernas",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 4 - Lower B",
+          "grupos": [
+            {
+              "grupo_muscular": "Cadena Posterior (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto con Barra Trap",
+                  "series": "2",
+                  "repeticiones": "3",
+                  "carga_notacion": "RPE 8.5",
+                  "nota": "Menos volumen, alta intensidad. ~133-138 kg."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Frontal o Goblet Squat",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 8.5",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca (Larsen Press)",
+                  "series": "3",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 7.5",
+                  "nota": "Aumentar carga manteniendo la técnica."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Zancadas con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "8-10 por pierna",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Curl Femoral Tumbado",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Core",
+              "ejercicios": [
+                {
+                  "nombre": "Elevaciones de Piernas Colgado",
+                  "series": "3",
+                  "repeticiones": "Máx. reps",
+                  "carga_notacion": "RIR 0-1",
+                  "nota": "Al fallo."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "semana": 5,
+      "fase": "Realización - Prueba de Fuerza",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Upper A",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca",
+                  "series": "1",
+                  "repeticiones": "2-3",
+                  "carga_notacion": "RPE 9",
+                  "nota": "Serie Top. Apuntar a ~106-110 kg. Es la serie más pesada del ciclo."
+                },
+                {
+                  "nombre": "Press Banca (Back-off)",
+                  "series": "2",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Reducir el peso un 10-15% para series de volumen."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Remo con Barra (Pendlay)",
+                  "series": "3",
+                  "repeticiones": "5-7",
+                  "carga_notacion": "RIR 2",
+                  "nota": "Reducir volumen para facilitar la recuperación."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Militar con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Elevaciones Laterales",
+                  "series": "3",
+                  "repeticiones": "10-15",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl de Bíceps con Barra",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Extensiones de Tríceps en Polea",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 2 - Lower A",
+          "grupos": [
+            {
+              "grupo_muscular": "Piernas (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Trasera",
+                  "series": "1",
+                  "repeticiones": "2-3",
+                  "carga_notacion": "RPE 9",
+                  "nota": "Serie Top. Apuntar a ~120-124 kg."
+                },
+                {
+                  "nombre": "Sentadilla Trasera (Back-off)",
+                  "series": "2",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Reducir el peso un 10-15%."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca con Pausa",
+                  "series": "2",
+                  "repeticiones": "3",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Volumen y carga reducidos."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Cadena Posterior (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto Rumano (RDL)",
+                  "series": "3",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RIR 2",
+                  "nota": "Reducir volumen."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Prensa de Piernas",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Elevación de Gemelos",
+                  "series": "3",
+                  "repeticiones": "10-15",
+                  "carga_notacion": "RIR 1",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 3 - Upper B",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Inclinado con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "6-8",
+                  "carga_notacion": "RPE 8",
+                  "nota": "Mantener intensidad pero bajo volumen."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Espalda (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas o Jalón al Pecho",
+                  "series": "3",
+                  "repeticiones": "5-7",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Remo en Máquina (Pecho Apoyado)",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Hombros y Pecho (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Face Pulls",
+                  "series": "3",
+                  "repeticiones": "15-20",
+                  "carga_notacion": "RIR 3",
+                  "nota": "Ligero."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Brazos (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl Martillo",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Press Francés con Mancuernas",
+                  "series": "3",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RIR 1-2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 4 - Lower B",
+          "grupos": [
+            {
+              "grupo_muscular": "Cadena Posterior (Básico)",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto con Barra Trap",
+                  "series": "1",
+                  "repeticiones": "2-3",
+                  "carga_notacion": "RPE 9",
+                  "nota": "Serie Top. Apuntar a ~139-143 kg."
+                },
+                {
+                  "nombre": "Peso Muerto con Barra Trap (Back-off)",
+                  "series": "2",
+                  "repeticiones": "4",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Reducir peso."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Básico Secundario)",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Frontal o Goblet Squat",
+                  "series": "2",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Volumen bajo."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Pecho (Frecuencia)",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca (Spoto Press)",
+                  "series": "3",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 6",
+                  "nota": "Muy ligero y técnico."
+                }
+              ]
+            },
+            {
+              "grupo_muscular": "Piernas (Accesorio)",
+              "ejercicios": [
+                {
+                  "nombre": "Curl Femoral Tumbado",
+                  "series": "3",
+                  "repeticiones": "10-12",
+                  "carga_notacion": "RIR 2",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "semana": 6,
+      "fase": "Descarga Activa",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Upper A",
+          "grupos": [
+            {
+              "grupo_muscular": "General",
+              "ejercicios": [
+                {
+                  "nombre": "Press Banca",
+                  "series": "2",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 6",
+                  "nota": "Peso ligero, ~70-75 kg. Enfoque en velocidad y técnica."
+                },
+                {
+                  "nombre": "Remo con Barra (Pendlay)",
+                  "series": "2",
+                  "repeticiones": "8",
+                  "carga_notacion": "RIR 4-5",
+                  "nota": "Muy ligero."
+                },
+                {
+                  "nombre": "Elevaciones Laterales",
+                  "series": "2",
+                  "repeticiones": "15",
+                  "carga_notacion": "RIR 4",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Curl de Bíceps con Barra",
+                  "series": "2",
+                  "repeticiones": "12",
+                  "carga_notacion": "RIR 4",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 2 - Lower A",
+          "grupos": [
+            {
+              "grupo_muscular": "General",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla Trasera",
+                  "series": "2",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 6",
+                  "nota": "Peso ligero, ~85-90 kg. Enfoque en profundidad y técnica."
+                },
+                {
+                  "nombre": "Press Banca con Pausa",
+                  "series": "2",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 5",
+                  "nota": "Solo con la barra o muy poco peso."
+                },
+                {
+                  "nombre": "Peso Muerto Rumano (RDL)",
+                  "series": "2",
+                  "repeticiones": "10",
+                  "carga_notacion": "RIR 5",
+                  "nota": "Estiramiento dinámico."
+                },
+                {
+                  "nombre": "Elevación de Gemelos",
+                  "series": "2",
+                  "repeticiones": "15",
+                  "carga_notacion": "RIR 4",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 3 - Upper B",
+          "grupos": [
+            {
+              "grupo_muscular": "General",
+              "ejercicios": [
+                {
+                  "nombre": "Press Inclinado con Mancuernas",
+                  "series": "2",
+                  "repeticiones": "10",
+                  "carga_notacion": "RPE 6",
+                  "nota": "Mancuernas ligeras."
+                },
+                {
+                  "nombre": "Jalón al Pecho",
+                  "series": "2",
+                  "repeticiones": "12",
+                  "carga_notacion": "RIR 4",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Face Pulls",
+                  "series": "2",
+                  "repeticiones": "20",
+                  "carga_notacion": "RIR 5",
+                  "nota": "Movimiento de bombeo."
+                },
+                {
+                  "nombre": "Extensiones de Tríceps en Polea",
+                  "series": "2",
+                  "repeticiones": "15",
+                  "carga_notacion": "RIR 4",
+                  "nota": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "dia_entrenamiento": "Día 4 - Lower B",
+          "grupos": [
+            {
+              "grupo_muscular": "General",
+              "ejercicios": [
+                {
+                  "nombre": "Peso Muerto con Barra Trap",
+                  "series": "2",
+                  "repeticiones": "5",
+                  "carga_notacion": "RPE 6",
+                  "nota": "Peso ligero, ~90-95 kg. Movimiento rápido."
+                },
+                {
+                  "nombre": "Sentadilla Goblet",
+                  "series": "2",
+                  "repeticiones": "10",
+                  "carga_notacion": "RIR 5",
+                  "nota": "Foco en movilidad."
+                },
+                {
+                  "nombre": "Curl Femoral Tumbado",
+                  "series": "2",
+                  "repeticiones": "15",
+                  "carga_notacion": "RIR 4",
+                  "nota": ""
+                },
+                {
+                  "nombre": "Plancha Abdominal",
+                  "series": "2",
+                  "repeticiones": "45 segundos",
+                  "carga_notacion": "N/A",
+                  "nota": "Activación, no agotamiento."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
