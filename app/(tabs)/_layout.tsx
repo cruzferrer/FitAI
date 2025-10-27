@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import COLORS from '../../constants/theme'; // Importamos el objeto COLORS
+import {COLORS} from '../../constants/theme'; // Importamos el objeto COLORS
 
 // Este componente define el navegador de pestañas inferiores para la app principal
 const TabLayout: React.FC = () => {

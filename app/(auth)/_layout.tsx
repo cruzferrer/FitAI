@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import COLORS from '../../constants/theme'; // Asegúrate de que la ruta sea correcta
+import {COLORS} from '../../constants/theme'; // Asegúrate de que la ruta sea correcta
 
 const AuthLayout: React.FC = () => {
   return (
