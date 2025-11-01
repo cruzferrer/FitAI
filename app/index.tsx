@@ -2,7 +2,7 @@ import { Redirect, SplashScreen } from 'expo-router';
 import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
-import COLORS from '../constants/theme';
+import {COLORS} from '../constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,9 +23,12 @@ export default function RootRedirector() {
     );
   }
 
+  // Lógica de Redirección
   if (!isAuthenticated) {
-    return <Redirect href="/(auth)" />; 
+    return <Redirect href="/(auth)" />; // Envía a app/(auth)/index.tsx
   }
+  
+  // Si SÍ hay sesión, vamos a las pestañas principales
   return <Redirect href="/(tabs)" />;
 }
 

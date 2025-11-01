@@ -1,0 +1,16 @@
+{
+  "lint": {
+    "files": {
+      "include": ["./index.ts"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "include": ["./index.ts"]
+    }
+  },
+  "imports": {
+    "openai": "https://esm.sh/openai@4.47.1",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+  }
+}

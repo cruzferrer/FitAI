@@ -1,15 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons'; // Usamos iconos de Google/Apple
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons'; // Usamos iconos de Google/Apple
 import { COLORS } from '../../constants/theme';
 
 // Definimos las props (propiedades) que recibirá el componente
 interface HomeHeaderProps {
   onSearchPress: () => void;
   onNotificationsPress: () => void;
+  onLogoutPress: () => void; // <-- NUEVA PROP
 }
 
-const HomeHeader: React.FC<HomeHeaderProps> = ({ onSearchPress, onNotificationsPress }) => {
+const HomeHeader: React.FC<HomeHeaderProps> = ({ onSearchPress, onNotificationsPress, onLogoutPress }) => {
   return (
     <View style={styles.headerContainer}>
       {/* Título de la Aplicación */}
@@ -28,6 +29,10 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ onSearchPress, onNotificationsP
           <Ionicons name="notifications-outline" size={24} color={COLORS.primaryText} />
           {/* Opcional: Indicador de Notificación (el punto rojo) */}
           <View style={styles.notificationBadge} />
+        </TouchableOpacity>
+        {/* BOTÓN DE CERRAR SESIÓN (NUEVO) */}
+        <TouchableOpacity onPress={onLogoutPress} style={[styles.iconButton, { marginLeft: 20 }]}>
+          <MaterialCommunityIcons name="logout" size={24} color={COLORS.secondaryText} />
         </TouchableOpacity>
       </View>
     </View>

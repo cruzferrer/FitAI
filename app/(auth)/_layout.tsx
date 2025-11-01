@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import {COLORS} from '../../constants/theme'; // Asegúrate de que la ruta sea correcta
+import {COLORS} from '../../constants/theme';
 
 const AuthLayout: React.FC = () => {
   return (
@@ -8,12 +8,10 @@ const AuthLayout: React.FC = () => {
       screenOptions={{
         // Aseguramos que NO se muestre el encabezado en este stack
         headerShown: false, 
-        
         // ¡Esta línea fuerza el fondo del contenedor del Stack!
         contentStyle: { 
           backgroundColor: COLORS.background, 
         },
-        
         // Esta línea es la que fuerza el color de fondo del header (si se mostrara)
         headerStyle: {
           backgroundColor: COLORS.background, 

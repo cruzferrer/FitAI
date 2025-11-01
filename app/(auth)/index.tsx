@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import {COLORS} from "../../constants/theme"; // Importamos el objeto COLORS
+import {COLORS} from "../../constants/theme";
+import { useAuth } from "../../hooks/useAuth"; 
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -19,19 +20,23 @@ const LoginScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
+  const { signIn } = useAuth(); 
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+
     if (!email || !password) {
       Alert.alert("Error", "Por favor, ingresa tu correo y contraseña.");
       return;
     }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      // Aquí iría la lógica de redirección si el login fuera exitoso:
-      // router.replace('/(tabs)');
-      Alert.alert("Estado", "Login con Supabase pendiente.");
-    }, 1500);
+    const { error } = await signIn(email, password);
+
+    setIsLoading(false);
+
+    if (error) {
+      Alert.alert("Error de Login", error.message);
+    }
+    router.replace('/(auth)/onboarding');
   };
 
   const handleSocialLogin = (provider: "Google" | "Apple") => {
@@ -51,6 +56,7 @@ const LoginScreen: React.FC = () => {
             placeholderTextColor={COLORS.secondaryText}
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
             onChangeText={setEmail}
           />
           <TextInput
@@ -58,6 +64,7 @@ const LoginScreen: React.FC = () => {
             placeholder="Contraseña"
             placeholderTextColor={COLORS.secondaryText}
             secureTextEntry
+            value={password}
             onChangeText={setPassword}
           />
 
@@ -74,11 +81,9 @@ const LoginScreen: React.FC = () => {
           </TouchableOpacity>
 
           <View style={styles.linkContainer}>
-            {/* ¡CORRECCIÓN DE TIPADO APLICADA! Usamos rutas sin el slash inicial. */}
             <TouchableOpacity onPress={() => router.push("forgot-password")}>
               <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
-
             <TouchableOpacity onPress={() => router.push("register")}>
               <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
             </TouchableOpacity>
@@ -110,12 +115,9 @@ const LoginScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
 
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
   container: {
     flex: 1,
     paddingHorizontal: 20,
