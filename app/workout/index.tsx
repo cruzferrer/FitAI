@@ -14,7 +14,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // Importamos el nuevo componente interactivo
-import ExerciseLogger from "../../components/ExerciseLogger";
+import ExerciseLogger from "@/components/Exercise/ExerciseLogger";
 
 // --- TIPOS DE DATOS (Basado en el JSON que SÍ funciona) ---
 interface EjercicioPrescrito {
@@ -32,20 +32,9 @@ interface GrupoMuscular {
 }
 
 interface DiaEntrenamiento {
-  dia: number;
+  dia?: number; // Puede no tener 'dia'
   dia_entrenamiento: string; // La clave real (e.g., "Día 1 - Upper")
   grupos: GrupoMuscular[];
-}
-
-interface RutinaGenerada {
-  rutina_periodizada:
-    | {
-        semanas: {
-          numero: number;
-          dias: DiaEntrenamiento[];
-        }[];
-      }
-    | DiaEntrenamiento[];
 }
 // --- FIN DE TIPOS ---
 
@@ -74,7 +63,7 @@ const WorkoutLogScreen: React.FC = () => {
     };
   }, [isActive, seconds]);
 
-  // Lógica de carga de Datos (Usando la estructura de JSON que SÍ funciona)
+  // Lógica de carga de Datos (Manejando AMBAS ESTRUCTURAS JSON)
   useEffect(() => {
     const loadWorkoutData = async () => {
       setIsLoading(true);
@@ -85,25 +74,26 @@ const WorkoutLogScreen: React.FC = () => {
           const rutina = JSON.parse(jsonString);
 
           let targetDay: DiaEntrenamiento | undefined;
+          let semanasArray: any[] | undefined;
 
-          // 1. Intentamos leer la estructura de ARRAY (la que te funcionó)
-          if (Array.isArray(rutina.rutina_periodizada)) {
-            const semana = rutina.rutina_periodizada[0]; // Semana 1
+          // 1. Verificamos si la IA envió la estructura de OBJETO (la que falló en HomeScreen)
+          if (rutina.rutina_periodizada && rutina.rutina_periodizada.semanas) {
+            semanasArray = rutina.rutina_periodizada.semanas;
+          }
+          // 2. Verificamos si la IA envió la estructura de ARRAY (la que te funcionó)
+          else if (Array.isArray(rutina.rutina_periodizada)) {
+            semanasArray = rutina.rutina_periodizada;
+          }
+
+          // 3. Si encontramos el array de semanas, buscamos el día
+          if (semanasArray && semanasArray.length > 0) {
+            const semana = semanasArray[0]; // Tomamos la Semana 1
             if (semana && semana.dias) {
+              // Buscamos por la clave 'dia_entrenamiento' O 'descripcion'
               targetDay = semana.dias.find(
-                (d: any) => d.dia_entrenamiento === day
+                (d: any) => d.dia_entrenamiento === day || d.descripcion === day
               );
             }
-          }
-          // 2. (Opcional) Si la IA cambia a la estructura de OBJETO, también funciona
-          else if (
-            rutina.rutina_periodizada &&
-            rutina.rutina_periodizada.semanas
-          ) {
-            const semana = rutina.rutina_periodizada.semanas[0];
-            targetDay = semana.dias.find(
-              (d: any) => d.dia_entrenamiento === day
-            );
           }
 
           if (targetDay) {
@@ -158,12 +148,12 @@ const WorkoutLogScreen: React.FC = () => {
     );
   }
 
-  if (!diaActualData) {
+  if (!diaActualData || !diaActualData.grupos) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loaderContainer}>
           <Text style={styles.noteText}>
-            Error: No se pudieron cargar los datos del día.
+            Error: Los datos de este día están corruptos o vacíos.
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={{ color: COLORS.accent, marginTop: 20 }}>Volver</Text>
@@ -194,7 +184,7 @@ const WorkoutLogScreen: React.FC = () => {
             color={COLORS.primaryText}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
+        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
           {diaActualData.dia_entrenamiento}
         </Text>
         <View style={styles.timerGroup}>
@@ -222,6 +212,10 @@ const WorkoutLogScreen: React.FC = () => {
                 ejercicio={ejercicio}
                 exerciseIndex={eIndex}
                 grupoMuscular={grupo.grupo_muscular}
+                onLogUpdate={(exName, sets, notes) => {
+                  // Aquí se manejaría la actualización del estado global si fuera necesario
+                  // Por ahora, el estado vive dentro de ExerciseLogger
+                }}
               />
             ))}
           </View>
@@ -242,26 +236,32 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  // --- ESTILOS DEL HEADER CORREGIDOS ---
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "center", // Alinea verticalmente
     paddingHorizontal: 10,
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.separator,
   },
   headerButton: {
+    flex: 0.15, // Ocupa el 15%
     padding: 5,
   },
   headerTitle: {
+    flex: 0.5, // Ocupa el 50% (espacio sobrante principal)
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.primaryText,
+    textAlign: "center", // Centra el título
+    paddingHorizontal: 5, // Evita que toque los bordes
   },
   timerGroup: {
+    flex: 0.35, // Ocupa el 35%
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-end", // Alinea a la derecha
   },
   timerText: {
     fontSize: 16,
@@ -294,9 +294,10 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   noteText: {
+    // Estilo para el loader
     color: COLORS.secondaryText,
     fontSize: 12,
-    marginBottom: 15,
+    marginTop: 10,
     fontStyle: "italic",
   },
 });

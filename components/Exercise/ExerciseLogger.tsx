@@ -7,10 +7,10 @@ import {
   TextInput,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { COLORS } from "../constants/theme"; // Asegúrate de que la ruta a 'theme' sea correcta
+import { COLORS } from "@/constants/theme";
+import * as Haptics from "expo-haptics"; // Importamos Haptics
 
 // --- TIPOS DE DATOS ---
-// El ejercicio prescrito por la IA
 interface EjercicioPrescrito {
   nombre: string;
   series: string;
@@ -20,7 +20,6 @@ interface EjercicioPrescrito {
   descanso?: string;
 }
 
-// El estado de cada set que el usuario registra
 interface SetRecord {
   prescribed_carga: string;
   prescribed_reps: string;
@@ -32,27 +31,28 @@ interface SetRecord {
 interface ExerciseLoggerProps {
   ejercicio: EjercicioPrescrito;
   grupoMuscular: string;
+  onLogUpdate: (exerciseName: string, sets: SetRecord[], notes: string) => void; // Para guardar en el futuro
 }
 
-// --- SUB-COMPONENTE: FILA DE SERIE (AHORA INTERACTIVA) ---
+// --- SUB-COMPONENTE: FILA DE SERIE (INTERACTIVA) ---
 const SetRow: React.FC<{
   set: SetRecord;
   setIndex: number;
-  onUpdateSet: (
-    index: number,
-    key: keyof SetRecord,
-    value: string | boolean
-  ) => void;
+  onUpdateSet: (index: number, updatedSet: SetRecord) => void;
 }> = ({ set, setIndex, onUpdateSet }) => {
   const isCompleted = set.completed;
 
   const handleChange = (key: "actual_kg" | "actual_reps", value: string) => {
-    onUpdateSet(setIndex, key, value);
+    const updatedSet = { ...set, [key]: value, completed: false }; // Desmarca si edita
+    onUpdateSet(setIndex, updatedSet);
   };
 
   const handleToggleComplete = () => {
     const newCompletedState = !isCompleted;
-    // Autocompletar con los valores prescritos si los inputs están vacíos al marcar
+
+    // --- 1. VIBRACIÓN ---
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     let newKg = set.actual_kg;
     let newReps = set.actual_reps;
 
@@ -60,27 +60,28 @@ const SetRow: React.FC<{
       newKg = set.prescribed_carga;
     }
     if (newCompletedState && !newReps) {
-      // Extrae solo el primer número de las repeticiones (ej. "8-10" -> "8")
       newReps = set.prescribed_reps.split(/[^0-9]/)[0] || set.prescribed_reps;
     }
 
-    onUpdateSet(setIndex, "completed", newCompletedState);
-    onUpdateSet(setIndex, "actual_kg", newKg);
-    onUpdateSet(setIndex, "actual_reps", newReps);
+    onUpdateSet(setIndex, {
+      ...set,
+      completed: newCompletedState,
+      actual_kg: newKg,
+      actual_reps: newReps,
+    });
   };
 
   return (
+    // --- 2. COLOR DE FILA ---
     <View style={[setStyles.row, isCompleted && setStyles.rowCompleted]}>
       <Text style={setStyles.setNumber}>{setIndex + 1}</Text>
 
-      {/* Columna PRESCRIBED (Referencia de la IA) */}
       <View style={setStyles.colPrevious}>
         <Text style={setStyles.previousText}>
           {set.prescribed_carga} x {set.prescribed_reps}
         </Text>
       </View>
 
-      {/* Columna KG (Input del Usuario) */}
       <View style={[setStyles.col, { flex: 0.9 }]}>
         <TextInput
           style={[setStyles.input, isCompleted && setStyles.inputCompleted]}
@@ -93,12 +94,11 @@ const SetRow: React.FC<{
         />
       </View>
 
-      {/* Columna REPS (Input del Usuario) */}
       <View style={[setStyles.col, { flex: 0.7 }]}>
         <TextInput
           style={[setStyles.input, isCompleted && setStyles.inputCompleted]}
           keyboardType="numeric"
-          placeholder={set.prescribed_reps.split(/[^0-9]/)[0]} // Muestra solo el primer número como pista
+          placeholder={set.prescribed_reps.split(/[^0-9]/)[0]}
           placeholderTextColor={COLORS.secondaryText}
           value={set.actual_reps}
           onChangeText={(value) => handleChange("actual_reps", value)}
@@ -106,7 +106,6 @@ const SetRow: React.FC<{
         />
       </View>
 
-      {/* Columna Check */}
       <TouchableOpacity
         style={setStyles.colCheck}
         onPress={handleToggleComplete}
@@ -114,7 +113,7 @@ const SetRow: React.FC<{
         <MaterialCommunityIcons
           name={isCompleted ? "check-circle" : "check-circle-outline"}
           size={24}
-          color={isCompleted ? COLORS.accent : COLORS.separator}
+          color={isCompleted ? COLORS.accent : COLORS.separator} // Color acento al completar
         />
       </TouchableOpacity>
     </View>
@@ -126,8 +125,8 @@ const SetRow: React.FC<{
 const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   ejercicio,
   grupoMuscular,
+  onLogUpdate,
 }) => {
-  // Inicializa el estado de las series con los datos prescritos por la IA
   const initialSets: SetRecord[] = Array.from({
     length: parseInt(ejercicio.series, 10) || 0,
   }).map(() => ({
@@ -139,40 +138,32 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   }));
 
   const [sets, setSets] = useState<SetRecord[]>(initialSets);
-  const [userNotes, setUserNotes] = useState(ejercicio.nota || ""); // Estado para notas del usuario
+  const [userNotes, setUserNotes] = useState(ejercicio.nota || "");
 
   // Manejador para actualizar el estado de una serie específica
-  const handleUpdateSet = (
-    index: number,
-    key: keyof SetRecord,
-    value: string | boolean
-  ) => {
+  const handleUpdateSet = (index: number, updatedSet: SetRecord) => {
     setSets((prevSets) => {
       const newSets = [...prevSets];
-      newSets[index] = {
-        ...newSets[index],
-        [key]: value,
-      };
-      // Si el usuario edita el peso/reps, desmarca el 'completed'
-      if (key !== "completed" && newSets[index].completed) {
-        newSets[index].completed = false;
-      }
+      newSets[index] = updatedSet;
+      onLogUpdate(ejercicio.nombre, newSets, userNotes); // Informa al padre
       return newSets;
     });
   };
 
+  const handleUpdateNotes = (text: string) => {
+    setUserNotes(text);
+    onLogUpdate(ejercicio.nombre, sets, text); // Informa al padre
+  };
+
   const addSet = () => {
-    setSets((prev) => [
-      ...prev,
-      // Añade un set vacío (o copia el último)
-      {
-        prescribed_carga: sets[0]?.prescribed_carga || "RPE 7",
-        prescribed_reps: sets[0]?.prescribed_reps || "8-10",
-        actual_kg: "",
-        actual_reps: "",
-        completed: false,
-      },
-    ]);
+    const newSet = {
+      prescribed_carga: sets[0]?.prescribed_carga || "RPE 7",
+      prescribed_reps: sets[0]?.prescribed_reps || "8-10",
+      actual_kg: "",
+      actual_reps: "",
+      completed: false,
+    };
+    setSets((prev) => [...prev, newSet]);
   };
 
   const notePlaceholder =
@@ -184,7 +175,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
 
   return (
     <View style={styles.exerciseBlock}>
-      {/* Título y Grupo Muscular */}
       <Text style={styles.groupSubtitle}>{grupoMuscular.toUpperCase()}</Text>
       <Text style={styles.exerciseTitle}>{ejercicio.nombre}</Text>
 
@@ -196,11 +186,10 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
           placeholderTextColor={COLORS.secondaryText}
           multiline
           value={userNotes}
-          onChangeText={setUserNotes}
+          onChangeText={handleUpdateNotes}
         />
       </View>
 
-      {/* Fila de Encabezados */}
       <View style={setStyles.headerRow}>
         <Text style={setStyles.headerText}>SET</Text>
         <Text style={setStyles.headerText}>PRESC.</Text>
@@ -209,7 +198,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
         <View style={{ width: 30 }} />
       </View>
 
-      {/* Filas de Series (Mapeo dinámico) */}
       {sets.map((set, setIndex) => (
         <SetRow
           key={setIndex}
@@ -219,7 +207,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
         />
       ))}
 
-      {/* Botón Añadir Set */}
       <TouchableOpacity style={styles.addSetButton} onPress={addSet}>
         <MaterialCommunityIcons name="plus" size={16} color={COLORS.accent} />
         <Text style={styles.addSetText}>Add Set</Text>
@@ -253,8 +240,9 @@ const setStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.separator,
   },
+  // --- 2. COLOR DE FILA (Hevy usa el acento con opacidad) ---
   rowCompleted: {
-    backgroundColor: `${COLORS.accent}15`, // Fondo con opacidad
+    backgroundColor: `${COLORS.accent}20`, // Azul (Acento) con ~12% de opacidad
   },
   setNumber: {
     color: COLORS.primaryText,
@@ -295,7 +283,7 @@ const setStyles = StyleSheet.create({
   inputCompleted: {
     backgroundColor: COLORS.inputBackground,
     borderColor: COLORS.accent,
-    color: COLORS.secondaryText, // Color atenuado
+    color: COLORS.secondaryText,
   },
   colCheck: {
     flex: 0.3,
