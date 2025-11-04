@@ -11,122 +11,122 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import COLORS from "../../constants/theme";
+import { COLORS } from "../../constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// Importamos el nuevo componente interactivo
+import ExerciseLogger from "../../components/ExerciseLogger";
 
-// --- Definición de Tipos (Basado en el JSON de la IA) ---
-interface Ejercicio {
+// --- TIPOS DE DATOS (Basado en el JSON que SÍ funciona) ---
+interface EjercicioPrescrito {
   nombre: string;
   series: string;
   repeticiones: string;
   carga_notacion: string;
-  nota: string;
+  nota?: string;
+  descanso?: string;
 }
 
 interface GrupoMuscular {
   grupo_muscular: string;
-  ejercicios: Ejercicio[];
+  ejercicios: EjercicioPrescrito[];
 }
 
 interface DiaEntrenamiento {
-  dia_entrenamiento: string;
+  dia: number;
+  dia_entrenamiento: string; // La clave real (e.g., "Día 1 - Upper")
   grupos: GrupoMuscular[];
 }
 
-const SetRow = ({
-  setNumber,
-  carga,
-  reps,
-}: {
-  setNumber: number;
-  carga: string;
-  reps: string;
-}) => {
-  return (
-    <View style={setStyles.row}>
-      <Text style={setStyles.setNumber}>{setNumber}</Text>
-
-      {/* Columna PREVIOUS (del historial) - Vacía por ahora */}
-      <View style={setStyles.colPrevious}>
-        <Text style={setStyles.previousText}>—</Text>
-      </View>
-
-      {/* Columna KG (Prescripción de la IA) */}
-      <View style={[setStyles.col, { flex: 0.9 }]}>
-        <Text style={setStyles.inputPlaceholder}>{carga}</Text>
-      </View>
-
-      {/* Columna REPS (Prescripción de la IA) */}
-      <View style={[setStyles.col, { flex: 0.7 }]}>
-        <Text style={setStyles.inputPlaceholder}>{reps}</Text>
-      </View>
-
-      {/* Columna Check */}
-      <TouchableOpacity style={setStyles.colCheck}>
-        <MaterialCommunityIcons
-          name="check-circle-outline"
-          size={24}
-          color={COLORS.secondaryText}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-};
+interface RutinaGenerada {
+  rutina_periodizada:
+    | {
+        semanas: {
+          numero: number;
+          dias: DiaEntrenamiento[];
+        }[];
+      }
+    | DiaEntrenamiento[];
+}
+// --- FIN DE TIPOS ---
 
 const WorkoutLogScreen: React.FC = () => {
   const router = useRouter();
-  const { day } = useLocalSearchParams(); // Obtiene el nombre del día de la URL
+  const { day } = useLocalSearchParams(); // Contiene el 'dia_entrenamiento'
 
   const [diaActualData, setDiaActualData] = useState<DiaEntrenamiento | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(true);
-
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(true);
 
-  useEffect(() => {
-    const loadWorkoutData = async () => {
-      setIsLoading(true);
-      const jsonString = await AsyncStorage.getItem("@FitAI_UserRoutine");
-
-      if (jsonString) {
-        const rutina = JSON.parse(jsonString);
-
-        // Buscamos el día que coincida con el parámetro de la URL
-        // Asumimos que la IA genera al menos una semana
-        const semana = rutina.rutina_periodizada[0];
-        const diaData = semana.dias.find(
-          (d: DiaEntrenamiento) => d.dia_entrenamiento === day
-        );
-
-        if (diaData) {
-          setDiaActualData(diaData);
-        } else {
-          Alert.alert("Error", "No se encontró el día de entrenamiento.");
-        }
-      }
-      setIsLoading(false);
-    };
-
-    loadWorkoutData();
-  }, [day]); // Se ejecuta cada vez que el parámetro 'day' cambie
-
+  // Lógica del Timer (sin cambios)
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isActive) {
-      interval = setInterval(() => {
-        setSeconds((prevSeconds) => prevSeconds + 1);
-      }, 1000) as unknown as NodeJS.Timeout;
-    } else if (!isActive && seconds !== 0) {
-      if (interval) clearInterval(interval);
+      interval = setInterval(
+        () => setSeconds((prevSeconds) => prevSeconds + 1),
+        1000
+      ) as unknown as NodeJS.Timeout;
     }
-
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [isActive, seconds]);
 
+  // Lógica de carga de Datos (Usando la estructura de JSON que SÍ funciona)
+  useEffect(() => {
+    const loadWorkoutData = async () => {
+      setIsLoading(true);
+      const jsonString = await AsyncStorage.getItem("@FitAI_UserRoutine");
+
+      try {
+        if (jsonString && day && typeof day === "string") {
+          const rutina = JSON.parse(jsonString);
+
+          let targetDay: DiaEntrenamiento | undefined;
+
+          // 1. Intentamos leer la estructura de ARRAY (la que te funcionó)
+          if (Array.isArray(rutina.rutina_periodizada)) {
+            const semana = rutina.rutina_periodizada[0]; // Semana 1
+            if (semana && semana.dias) {
+              targetDay = semana.dias.find(
+                (d: any) => d.dia_entrenamiento === day
+              );
+            }
+          }
+          // 2. (Opcional) Si la IA cambia a la estructura de OBJETO, también funciona
+          else if (
+            rutina.rutina_periodizada &&
+            rutina.rutina_periodizada.semanas
+          ) {
+            const semana = rutina.rutina_periodizada.semanas[0];
+            targetDay = semana.dias.find(
+              (d: any) => d.dia_entrenamiento === day
+            );
+          }
+
+          if (targetDay) {
+            setDiaActualData(targetDay);
+          } else {
+            Alert.alert(
+              "Error",
+              `No se encontró el día '${day}' en la rutina guardada.`
+            );
+          }
+        }
+      } catch (e) {
+        console.error("Error al parsear la rutina en WorkoutLog:", e);
+        Alert.alert("Error Crítico", "La rutina guardada está corrupta.");
+      }
+
+      setIsLoading(false);
+    };
+
+    loadWorkoutData();
+  }, [day]);
+
+  // --- Funciones de Header ---
   const formatTime = (totalSeconds: number) => {
     const m = Math.floor((totalSeconds % 3600) / 60);
     const s = totalSeconds % 60;
@@ -135,6 +135,7 @@ const WorkoutLogScreen: React.FC = () => {
 
   const handleFinish = () => {
     setIsActive(false);
+    // TODO: Recopilar el estado del registro (workoutLog) y enviarlo al servidor
     Alert.alert(
       "Finalizar Rutina",
       `Entrenamiento completado en ${formatTime(seconds)}. ¿Deseas guardar?`,
@@ -146,7 +147,6 @@ const WorkoutLogScreen: React.FC = () => {
   };
 
   // --- Renderizado ---
-
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -173,6 +173,13 @@ const WorkoutLogScreen: React.FC = () => {
     );
   }
 
+  const totalSets = diaActualData.grupos.reduce(
+    (acc, g) =>
+      acc +
+      g.ejercicios.reduce((eAcc, e) => eAcc + (parseInt(e.series, 10) || 0), 0),
+    0
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header de Log (Simulando el diseño de la imagen) */}
@@ -187,8 +194,9 @@ const WorkoutLogScreen: React.FC = () => {
             color={COLORS.primaryText}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Log Workout</Text>
-
+        <Text style={styles.headerTitle}>
+          {diaActualData.dia_entrenamiento}
+        </Text>
         <View style={styles.timerGroup}>
           <Text style={styles.timerText}>{formatTime(seconds)}</Text>
           <TouchableOpacity onPress={handleFinish} style={styles.finishButton}>
@@ -199,62 +207,22 @@ const WorkoutLogScreen: React.FC = () => {
 
       <View style={styles.summaryBar}>
         <Text style={styles.summaryText}>Duration: {formatTime(seconds)}</Text>
-        <Text style={styles.summaryText}>
-          Sets:{" "}
-          {diaActualData.grupos.reduce(
-            (acc, g) =>
-              acc +
-              g.ejercicios.reduce(
-                (eAcc, e) => eAcc + parseInt(e.series, 10),
-                0
-              ),
-            0
-          )}
-        </Text>
+        <Text style={styles.summaryText}>Sets: {totalSets}</Text>
         <Text style={styles.summaryText}>Volume: 0 kg</Text>
       </View>
 
-      {/* Contenido de la Rutina (Mapeo Real) */}
+      {/* Contenido de la Rutina (Mapeo por Grupos) */}
       <ScrollView contentContainerStyle={styles.contentContainer}>
         {diaActualData.grupos.map((grupo, gIndex) => (
           <View key={`group-${gIndex}`}>
             {grupo.ejercicios.map((ejercicio, eIndex) => (
-              <View key={`ex-${eIndex}`} style={styles.exerciseBlock}>
-                <Text style={styles.exerciseTitle}>{ejercicio.nombre}</Text>
-                <Text style={styles.noteText}>
-                  {ejercicio.nota || "Añadir notas aquí..."}
-                </Text>
-
-                {/* Fila de Encabezados */}
-                <View style={setStyles.headerRow}>
-                  <Text style={setStyles.headerText}>SET</Text>
-                  <Text style={setStyles.headerText}>PREVIOUS</Text>
-                  <Text style={setStyles.headerText}>CARGA (IA)</Text>
-                  <Text style={setStyles.headerText}>REPS (IA)</Text>
-                  <View style={{ width: 30 }} />
-                </View>
-
-                {/* Filas de Series (Generadas dinámicamente) */}
-                {Array.from({ length: parseInt(ejercicio.series, 10) }).map(
-                  (_, setIndex) => (
-                    <SetRow
-                      key={setIndex}
-                      setNumber={setIndex + 1}
-                      carga={ejercicio.carga_notacion}
-                      reps={ejercicio.repeticiones}
-                    />
-                  )
-                )}
-
-                <TouchableOpacity style={styles.addSetButton}>
-                  <MaterialCommunityIcons
-                    name="plus"
-                    size={16}
-                    color={COLORS.accent}
-                  />
-                  <Text style={styles.addSetText}>Add Set</Text>
-                </TouchableOpacity>
-              </View>
+              // Usamos el ExerciseLogger para cada ejercicio
+              <ExerciseLogger
+                key={`ex-${eIndex}`}
+                ejercicio={ejercicio}
+                exerciseIndex={eIndex}
+                grupoMuscular={grupo.grupo_muscular}
+              />
             ))}
           </View>
         ))}
@@ -263,73 +231,7 @@ const WorkoutLogScreen: React.FC = () => {
   );
 };
 
-// Estilos específicos para las filas de series
-const setStyles = StyleSheet.create({
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.separator,
-    marginBottom: 5,
-  },
-  headerText: {
-    color: COLORS.secondaryText,
-    fontSize: 12,
-    fontWeight: "bold",
-    textAlign: "center",
-    flex: 1,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.separator,
-  },
-  setNumber: {
-    color: COLORS.primaryText,
-    fontWeight: "bold",
-    fontSize: 16,
-    flex: 0.3,
-    textAlign: "center",
-  },
-  colPrevious: {
-    flex: 1,
-    alignItems: "center",
-    paddingHorizontal: 5,
-  },
-  previousText: {
-    color: COLORS.secondaryText,
-    fontSize: 14,
-  },
-  col: {
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    paddingHorizontal: 5,
-  },
-  inputPlaceholder: {
-    color: COLORS.primaryText,
-    fontSize: 16,
-    paddingHorizontal: 5,
-    borderRadius: 5,
-    minWidth: 40,
-    textAlign: "center",
-    fontWeight: "500",
-  },
-  unit: {
-    color: COLORS.secondaryText,
-    fontSize: 10,
-    marginLeft: 2,
-  },
-  colCheck: {
-    flex: 0.3,
-    alignItems: "center",
-  },
-});
-
+// --- ESTILOS ---
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -363,7 +265,7 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: 16,
-    color: COLORS.primaryText, // Cambiado a primario para mejor visibilidad
+    color: COLORS.primaryText,
     marginRight: 10,
   },
   finishButton: {
@@ -391,40 +293,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 15,
   },
-  exerciseBlock: {
-    backgroundColor: COLORS.inputBackground,
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: COLORS.separator,
-  },
-  exerciseTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: COLORS.primaryText,
-    marginBottom: 5,
-  },
   noteText: {
     color: COLORS.secondaryText,
     fontSize: 12,
     marginBottom: 15,
     fontStyle: "italic",
-  },
-  addSetButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 15,
-    padding: 10,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.separator,
-  },
-  addSetText: {
-    color: COLORS.accent,
-    fontSize: 16,
-    marginLeft: 5,
-    fontWeight: "bold",
   },
 });
 

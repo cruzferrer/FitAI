@@ -20,6 +20,8 @@ const OPTIONS = {
   experience: ["Principiante", "Intermedio", "Avanzado"],
   days: [3, 4, 5, 6],
   equipment: ["Gimnasio completo", "Mancuernas y casa", "Solo peso corporal"],
+  // --- AÑADIR ESTO ---
+  notation: ["RPE / RIR (Moderno)", "Tradicional (Al Fallo)"],
 };
 
 const OnboardingScreen: React.FC = () => {
@@ -30,11 +32,16 @@ const OnboardingScreen: React.FC = () => {
   const [experience, setExperience] = useState<string | null>(null);
   const [days, setDays] = useState<number | null>(null);
   const [equipment, setEquipment] = useState<string | null>(null);
+  // --- AÑADIR ESTE ESTADO ---
+  const [notation, setNotation] = useState<string | null>(
+    "Tradicional (Al Fallo)"
+  ); // Default
 
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerateRoutine = async () => {
-    if (!objective || !experience || !days || !equipment) {
+    // --- ACTUALIZAR VALIDACIÓN ---
+    if (!objective || !experience || !days || !equipment || !notation) {
       Alert.alert("Faltan Datos", "Por favor, completa todas las selecciones.");
       return;
     }
@@ -42,49 +49,48 @@ const OnboardingScreen: React.FC = () => {
     setIsLoading(true);
 
     try {
-      //El objeto de configuración va directamente en el segundo argumento
       const { data, error: invokeError } = await supabase.functions.invoke(
-        "generar-rutina", // Primer argumento: nombre de la función
+        "generar-rutina",
         {
-          // Segundo argumento: objeto de configuración
           method: "POST",
           body: {
             user_objective: objective,
             user_experience: experience,
             available_days: days,
             user_equipment: equipment,
+            user_notation: notation, // <-- ENVIAR LA NUEVA VARIABLE
           },
         }
       );
+
       if (invokeError) {
         throw new Error(invokeError.message);
       }
+
       if (data && data.error) {
         throw new Error(data.error);
       }
 
       const jsonOutput = data;
 
+      // Guardar el JSON
       await AsyncStorage.setItem(
         "@FitAI_UserRoutine",
         JSON.stringify(jsonOutput)
       );
 
-
       Alert.alert(
         "¡IA Conectada!",
         "Rutina generada. Revisa la consola o guarda los datos."
       );
+      console.log(JSON.stringify(jsonOutput, null, 2));
 
-      //Nos movemos a la pantalla principal
       router.replace("/(tabs)");
-      
     } catch (error) {
       let errorMessage = "Error desconocido o de red.";
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      // Este catch maneja el error de red o el error lanzado por invokeError.
       Alert.alert(
         "Error de IA",
         `El servidor falló: ${errorMessage}. Revisa la clave ANON.`
@@ -93,6 +99,7 @@ const OnboardingScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
+
   // Función auxiliar para renderizar los botones de opción
   const renderOptionButtons = (
     key: keyof typeof OPTIONS,
@@ -147,12 +154,21 @@ const OnboardingScreen: React.FC = () => {
         <Text style={styles.label}>4. Equipamiento Disponible:</Text>
         {renderOptionButtons("equipment", setEquipment, equipment)}
 
-        {/* Botón de Generación */}
+        {/* 5. AÑADIR ESTA SECCIÓN */}
+        <Text style={styles.label}>5. Preferencia de Notación:</Text>
+        {renderOptionButtons("notation", setNotation, notation)}
+
+        {/* Botón de Generación (actualizar disabled) */}
         <TouchableOpacity
           style={styles.generateButton}
           onPress={handleGenerateRoutine}
           disabled={
-            isLoading || !objective || !experience || !days || !equipment
+            isLoading ||
+            !objective ||
+            !experience ||
+            !days ||
+            !equipment ||
+            !notation
           }
         >
           {isLoading ? (
