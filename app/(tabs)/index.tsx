@@ -46,7 +46,7 @@ const HomeScreen: React.FC = () => {
   
   const handleLogout = async () => {
     await signOut();
-    // El Root Redirector (app/index.tsx) te enviará al Login
+    router.replace('/(auth)');
   };
   
   const handleStartWorkout = (dia_entrenamiento: string) => {
