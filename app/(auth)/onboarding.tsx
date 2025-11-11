@@ -1,20 +1,13 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "../../constants/supabaseClient";
 import { COLORS } from "../../constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import OptionSelector from "../../components/Form/OptionSelector";
+import PrimaryButton from "@/components/Buttons/PrimaryButton";
 
-// Opciones predefinidas para el formulario (Datos clave para el motor de IA)
 const OPTIONS = {
   objective: ["Fuerza", "Hipertrofia", "Mixto"],
   experience: ["Principiante", "Intermedio", "Avanzado"],
@@ -26,17 +19,13 @@ const OPTIONS = {
 
 const OnboardingScreen: React.FC = () => {
   const router = useRouter();
-
-  // Estados para capturar las selecciones del usuario
   const [objective, setObjective] = useState<string | null>(null);
   const [experience, setExperience] = useState<string | null>(null);
   const [days, setDays] = useState<number | null>(null);
   const [equipment, setEquipment] = useState<string | null>(null);
-  // --- AÑADIR ESTE ESTADO ---
   const [notation, setNotation] = useState<string | null>(
     "Tradicional (Al Fallo)"
-  ); // Default
-
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerateRoutine = async () => {
@@ -79,6 +68,16 @@ const OnboardingScreen: React.FC = () => {
         JSON.stringify(jsonOutput)
       );
 
+      // Inicializar el progreso (Semana 0, Día 0)
+      await AsyncStorage.setItem(
+        "@FitAI_WorkoutProgress",
+        JSON.stringify({
+          weekIndex: 0,
+          dayIndex: 0,
+          lastCompleted: null,
+        })
+      );
+
       Alert.alert(
         "¡IA Conectada!",
         "Rutina generada. Revisa la consola o guarda los datos."
@@ -101,83 +100,64 @@ const OnboardingScreen: React.FC = () => {
   };
 
   // Función auxiliar para renderizar los botones de opción
-  const renderOptionButtons = (
-    key: keyof typeof OPTIONS,
-    setValue: (v: any) => void,
-    currentValue: any
-  ) => (
-    <View style={styles.buttonGroup}>
-      {OPTIONS[key].map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          style={[
-            styles.optionButton,
-            currentValue === item && styles.optionButtonActive,
-          ]}
-          onPress={() => setValue(item)}
-          disabled={isLoading}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              currentValue === item && styles.optionTextActive,
-            ]}
-          >
-            {item}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>¡Hola! Configura FitAI 🤖</Text>
         <Text style={styles.subHeader}>
-          Necesitamos estos datos para generar tu Mesociclo de 6 semanas.
+          Necesitamos estos datos para generar tu Mesociclo.
         </Text>
 
-        {/* 1. Objetivo Principal */}
+        {/* --- 3. USAR EL NUEVO COMPONENTE --- */}
         <Text style={styles.label}>1. ¿Cuál es tu objetivo principal?</Text>
-        {renderOptionButtons("objective", setObjective, objective)}
+        <OptionSelector
+          options={OPTIONS.objective}
+          selectedValue={objective}
+          onSelect={(val) => setObjective(val as string)}
+          disabled={isLoading}
+        />
 
-        {/* 2. Nivel de Experiencia */}
         <Text style={styles.label}>2. ¿Cuál es tu nivel de experiencia?</Text>
-        {renderOptionButtons("experience", setExperience, experience)}
+        <OptionSelector
+          options={OPTIONS.experience}
+          selectedValue={experience}
+          onSelect={(val) => setExperience(val as string)}
+          disabled={isLoading}
+        />
 
-        {/* 3. Días de Entrenamiento */}
         <Text style={styles.label}>3. Días disponibles a la semana:</Text>
-        {renderOptionButtons("days", setDays, days)}
+        <OptionSelector
+          options={OPTIONS.days}
+          selectedValue={days}
+          onSelect={(val) => setDays(val as number)}
+          disabled={isLoading}
+        />
 
-        {/* 4. Equipamiento Disponible */}
         <Text style={styles.label}>4. Equipamiento Disponible:</Text>
-        {renderOptionButtons("equipment", setEquipment, equipment)}
+        <OptionSelector
+          options={OPTIONS.equipment}
+          selectedValue={equipment}
+          onSelect={(val) => setEquipment(val as string)}
+          disabled={isLoading}
+        />
 
-        {/* 5. AÑADIR ESTA SECCIÓN */}
         <Text style={styles.label}>5. Preferencia de Notación:</Text>
-        {renderOptionButtons("notation", setNotation, notation)}
-
-        {/* Botón de Generación (actualizar disabled) */}
-        <TouchableOpacity
-          style={styles.generateButton}
-          onPress={handleGenerateRoutine}
-          disabled={
-            isLoading ||
-            !objective ||
-            !experience ||
-            !days ||
-            !equipment ||
-            !notation
-          }
-        >
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.background} />
-          ) : (
-            <Text style={styles.generateButtonText}>Generar Rutina con IA</Text>
-          )}
-        </TouchableOpacity>
+        <OptionSelector
+          options={OPTIONS.notation}
+          selectedValue={notation}
+          onSelect={(val) => setNotation(val as string)}
+          disabled={isLoading}
+        />
       </ScrollView>
+      <PrimaryButton
+        title="Generar Rutina con IA"
+        onPress={handleGenerateRoutine}
+        isLoading={isLoading}
+        disabled={!objective || !experience || !days || !equipment || !notation}
+        // Opcional: Si el botón tiene un estilo diferente en el Onboarding (margen, etc.), puedes pasarlo
+        style={{ marginTop: 40 }}
+      />
     </SafeAreaView>
   );
 };
@@ -219,19 +199,6 @@ const styles = StyleSheet.create({
   },
   optionText: { color: COLORS.primaryText, fontWeight: "500" },
   optionTextActive: { color: COLORS.background, fontWeight: "bold" },
-  generateButton: {
-    backgroundColor: COLORS.accent,
-    padding: 15,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 40,
-  },
-  generateButtonText: {
-    color: COLORS.background,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
 });
 
 export default OnboardingScreen;

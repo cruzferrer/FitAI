@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router'; // <-- Importar useRouter
-import {COLORS} from '@/constants/theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import HomeHeader from '@/components/Headers/HomeHeader';
-import RoutineStartCard from '@/components/Cards/RoutineStartCard'; // <-- Nuevo componente
-import { useAuth } from '../../hooks/useAuth'; // <-- Importar useAuth
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { COLORS } from "@/constants/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import HomeHeader from "@/components/Headers/HomeHeader";
+import RoutineStartCard from "@/components/Cards/RoutineStartCard";
+import { useAuth } from "../../hooks/useAuth";
 
 // Definimos la estructura del JSON que esperamos (simplificado)
 interface RutinaGenerada {
@@ -30,8 +37,8 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     const loadRoutine = async () => {
       setIsLoading(true);
-      const jsonString = await AsyncStorage.getItem('@FitAI_UserRoutine');
-      
+      const jsonString = await AsyncStorage.getItem("@FitAI_UserRoutine");
+
       if (jsonString) {
         setRutina(JSON.parse(jsonString));
       }
@@ -43,12 +50,12 @@ const HomeScreen: React.FC = () => {
 
   const handleSearch = () => Alert.alert("Búsqueda", "Pendiente.");
   const handleNotifications = () => Alert.alert("Notificaciones", "Pendiente.");
-  
+
   const handleLogout = async () => {
     await signOut();
-    router.replace('/(auth)');
+    router.replace("/(auth)");
   };
-  
+
   const handleStartWorkout = (dia_entrenamiento: string) => {
     router.push(`/workout?day=${encodeURIComponent(dia_entrenamiento)}` as any);
   };
@@ -58,7 +65,11 @@ const HomeScreen: React.FC = () => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <HomeHeader onSearchPress={handleSearch} onNotificationsPress={handleNotifications} onLogoutPress={handleLogout} />
+        <HomeHeader
+          onSearchPress={handleSearch}
+          onNotificationsPress={handleNotifications}
+          onLogoutPress={handleLogout}
+        />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={COLORS.accent} />
           <Text style={styles.subtitle}>Cargando tu rutina...</Text>
@@ -67,14 +78,24 @@ const HomeScreen: React.FC = () => {
     );
   }
 
-  if (!rutina || !rutina.rutina_periodizada || rutina.rutina_periodizada.length === 0) {
+  if (
+    !rutina ||
+    !rutina.rutina_periodizada ||
+    rutina.rutina_periodizada.length === 0
+  ) {
     // Si no hay rutina guardada, mostrar un mensaje para ir a generarla
     return (
       <SafeAreaView style={styles.safeArea}>
-        <HomeHeader onSearchPress={handleSearch} onNotificationsPress={handleNotifications} onLogoutPress={handleLogout} />
+        <HomeHeader
+          onSearchPress={handleSearch}
+          onNotificationsPress={handleNotifications}
+          onLogoutPress={handleLogout}
+        />
         <View style={styles.loaderContainer}>
           <Text style={styles.title}>No hay rutina activa</Text>
-          <Text style={styles.subtitle}>Ve a tu perfil para generar una nueva rutina.</Text>
+          <Text style={styles.subtitle}>
+            Ve a tu perfil para generar una nueva rutina.
+          </Text>
           {/* Aquí podrías poner un botón que navegue a Onboarding */}
         </View>
       </SafeAreaView>
@@ -83,18 +104,18 @@ const HomeScreen: React.FC = () => {
 
   // 2. Extraemos los datos de la rutina real generada por la IA
   const semanaActual = rutina.rutina_periodizada[0]; // (Semana 1)
-  const diaActual = semanaActual.dias[0]; 
+  const diaActual = semanaActual.dias[0];
   const proximosDias = semanaActual.dias.slice(1);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <HomeHeader 
-        onSearchPress={handleSearch} 
-        onNotificationsPress={handleNotifications} 
-        onLogoutPress={handleLogout} 
+      <HomeHeader
+        onSearchPress={handleSearch}
+        onNotificationsPress={handleNotifications}
+        onLogoutPress={handleLogout}
       />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
       >
@@ -104,10 +125,12 @@ const HomeScreen: React.FC = () => {
           fase={semanaActual.fase}
           onPress={() => handleStartWorkout(diaActual.dia_entrenamiento)}
         />
-        
+
         {/* PRÓXIMOS ENTRENAMIENTOS (Datos reales de la IA) */}
-        <Text style={styles.nextTitle}>— Próximos Entrenamientos (Semana {semanaActual.semana}) —</Text>
-        
+        <Text style={styles.nextTitle}>
+          — Próximos Entrenamientos (Semana {semanaActual.semana}) —
+        </Text>
+
         <View style={styles.nextList}>
           {proximosDias.map((dia, index) => (
             <View key={index} style={styles.nextDayCard}>
@@ -115,7 +138,6 @@ const HomeScreen: React.FC = () => {
             </View>
           ))}
         </View>
-        
       </ScrollView>
     </SafeAreaView>
   );
@@ -129,19 +151,19 @@ const styles = StyleSheet.create({
   },
   loaderContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  scrollView: { 
-    flex: 1, 
+  scrollView: {
+    flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20, 
+    paddingHorizontal: 20,
     paddingBottom: 40,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primaryText,
     marginBottom: 10,
   },
@@ -152,18 +174,18 @@ const styles = StyleSheet.create({
   },
   nextTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.secondaryText,
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   nextList: {
-    width: '100%',
+    width: "100%",
   },
   nextDayCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: COLORS.inputBackground,
     padding: 15,
     borderRadius: 10,
@@ -172,7 +194,7 @@ const styles = StyleSheet.create({
   nextDayText: {
     fontSize: 16,
     color: COLORS.primaryText,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 

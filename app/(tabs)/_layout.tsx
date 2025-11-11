@@ -1,49 +1,74 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import {COLORS} from '../../constants/theme'; // Importamos el objeto COLORS
+import React from "react";
+import { Tabs } from "expo-router";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { COLORS } from "@/constants/theme";
 
 // Este componente define el navegador de pestañas inferiores para la app principal
 const TabLayout: React.FC = () => {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: COLORS.accent, // Color activo del ícono
-        tabBarInactiveTintColor: COLORS.secondaryText, // Color inactivo
+        tabBarActiveTintColor: COLORS.accent,
+        tabBarInactiveTintColor: COLORS.secondaryText,
         tabBarStyle: {
-          backgroundColor: COLORS.background, // Fondo de la barra
-          borderTopColor: COLORS.separator, // Línea divisoria superior
+          backgroundColor: COLORS.background,
+          borderTopColor: COLORS.separator,
         },
-        headerShown: false, // Ocultamos el header por defecto para controlarlo a nivel de pantalla
+        headerShown: false,
       }}
     >
-      {/* Pestaña 1: Inicio / Rutina Actual */}
+      {/*  Pestaña 1:  DASHBOARD */}
       <Tabs.Screen
-        name="index" // Corresponde al archivo app/(tabs)/index.tsx
+        name="dashboard"
         options={{
-          title: 'Rutina',
+          title: "Dashboard",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="trending-up-outline" size={24} color={color} />
+          ),
+        }}
+      />
+
+      {/* Pestaña 2: Inicio / Rutina Actual */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Rutina",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="dumbbell" size={24} color={color} />
           ),
         }}
       />
-      
-      {/* Pestaña 2: Historial / Progreso */}
+
+      {/* Pestaña 3: Historial / Progreso */}
       <Tabs.Screen
-        name="progress" // Tendrás que crear app/(tabs)/progress.tsx
+        name="progress"
         options={{
-          title: 'Progreso',
+          title: "Progreso",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="chart-bar" size={24} color={color} />
           ),
         }}
       />
-
-      {/* Pestaña 3: Chatbot / Perfil */}
+      {/*  Pestaña 4:  NUTRICIÓN / PESO */}
       <Tabs.Screen
-        name="chat" // Tendrás que crear app/(tabs)/chat.tsx
+        name="nutrition"
         options={{
-          title: 'Chatbot',
+          title: "Nutrición",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="scale-bathroom"
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      {/* Pestaña 3: Chatbot  */}
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Chatbot",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="robot" size={24} color={color} />
           ),

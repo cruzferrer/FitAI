@@ -31,7 +31,8 @@ interface SetRecord {
 interface ExerciseLoggerProps {
   ejercicio: EjercicioPrescrito;
   grupoMuscular: string;
-  onLogUpdate: (exerciseName: string, sets: SetRecord[], notes: string) => void; // Para guardar en el futuro
+  exerciseIndex: number;
+  onLogUpdate: (exerciseName: string, sets: SetRecord[], notes: string) => void;
 }
 
 // --- SUB-COMPONENTE: FILA DE SERIE (INTERACTIVA) ---
@@ -126,6 +127,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   ejercicio,
   grupoMuscular,
   onLogUpdate,
+  exerciseIndex,
 }) => {
   const initialSets: SetRecord[] = Array.from({
     length: parseInt(ejercicio.series, 10) || 0,

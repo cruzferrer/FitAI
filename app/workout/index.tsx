@@ -63,6 +63,51 @@ const WorkoutLogScreen: React.FC = () => {
     };
   }, [isActive, seconds]);
 
+  const advanceProgress = async () => {
+    try {
+      const jsonString = await AsyncStorage.getItem("@FitAI_UserRoutine");
+      const progressString = await AsyncStorage.getItem(
+        "@FitAI_WorkoutProgress"
+      );
+
+      if (jsonString && progressString) {
+        const rutina = JSON.parse(jsonString);
+        let { weekIndex, dayIndex } = JSON.parse(progressString);
+        const semanas = rutina.rutina_periodizada.semanas;
+
+        // Avanzar al siguiente día
+        dayIndex++;
+
+        // Si se acabaron los días de esta semana, avanzar a la siguiente semana
+        if (dayIndex >= semanas[weekIndex].dias.length) {
+          dayIndex = 0;
+          weekIndex++;
+        }
+
+        // Si se acabaron las semanas, ¡el mesociclo terminó!
+        if (weekIndex >= semanas.length) {
+          Alert.alert("¡Felicidades!", "Has completado todo el mesociclo.");
+          // Aquí podrías resetear a 0,0 o marcar como finalizado.
+          // Por ahora, lo dejamos en el último día posible o lo reiniciamos:
+          weekIndex = 0;
+          dayIndex = 0;
+        }
+
+        // Guardar el nuevo progreso con la fecha de hoy
+        await AsyncStorage.setItem(
+          "@FitAI_WorkoutProgress",
+          JSON.stringify({
+            weekIndex,
+            dayIndex,
+            lastCompleted: new Date().toISOString(),
+          })
+        );
+      }
+    } catch (e) {
+      console.error("Error avanzando progreso:", e);
+    }
+  };
+
   // Lógica de carga de Datos (Manejando AMBAS ESTRUCTURAS JSON)
   useEffect(() => {
     const loadWorkoutData = async () => {
@@ -125,13 +170,18 @@ const WorkoutLogScreen: React.FC = () => {
 
   const handleFinish = () => {
     setIsActive(false);
-    // TODO: Recopilar el estado del registro (workoutLog) y enviarlo al servidor
     Alert.alert(
       "Finalizar Rutina",
-      `Entrenamiento completado en ${formatTime(seconds)}. ¿Deseas guardar?`,
+      `Entrenamiento completado. ¿Guardar y avanzar?`,
       [
         { text: "Cancelar", style: "cancel", onPress: () => setIsActive(true) },
-        { text: "Guardar y Salir", onPress: () => router.back() },
+        {
+          text: "Finalizar",
+          onPress: async () => {
+            await advanceProgress(); // <-- LLAMADA CLAVE
+            router.back();
+          },
+        },
       ]
     );
   };
@@ -212,10 +262,7 @@ const WorkoutLogScreen: React.FC = () => {
                 ejercicio={ejercicio}
                 exerciseIndex={eIndex}
                 grupoMuscular={grupo.grupo_muscular}
-                onLogUpdate={(exName, sets, notes) => {
-                  // Aquí se manejaría la actualización del estado global si fuera necesario
-                  // Por ahora, el estado vive dentro de ExerciseLogger
-                }}
+                onLogUpdate={(exName, sets, notes) => {}}
               />
             ))}
           </View>
