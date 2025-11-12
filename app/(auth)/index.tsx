@@ -1,43 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import {COLORS} from "../../constants/theme";
-import { useAuth } from "../../hooks/useAuth"; 
+import { COLORS } from "../../constants/theme";
+import PrimaryButton from "../../components/Buttons/PrimaryButton";
+import { useLogin } from "../../hooks/auth/useLogin"; // <-- NUEVO HOOK
 
 const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const router = useRouter();
-  const { signIn } = useAuth(); 
-
-  const handleLogin = async () => {
-
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor, ingresa tu correo y contraseña.");
-      return;
-    }
-    setIsLoading(true);
-    const { error } = await signIn(email, password);
-
-    setIsLoading(false);
-
-    if (error) {
-      Alert.alert("Error de Login", error.message);
-    }
-    router.replace('/(auth)/onboarding');
-  };
+  const { email, setEmail, password, setPassword, isLoading, handleLogin } =
+    useLogin();
 
   const handleSocialLogin = (provider: "Google" | "Apple") => {
     Alert.alert("Pendiente", `Login con ${provider} pendiente.`);
@@ -68,23 +48,20 @@ const LoginScreen: React.FC = () => {
             onChangeText={setPassword}
           />
 
-          <TouchableOpacity
-            style={styles.loginButton}
+          <PrimaryButton
+            title="Iniciar Sesión"
             onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={COLORS.primaryText} />
-            ) : (
-              <Text style={styles.buttonText}>Iniciar Sesión</Text>
-            )}
-          </TouchableOpacity>
+            isLoading={isLoading}
+            style={{ marginTop: 10 }}
+          />
 
           <View style={styles.linkContainer}>
-            <TouchableOpacity onPress={() => router.push("forgot-password")}>
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/forgot-password")}
+            >
               <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("register")}>
+            <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
               <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
             </TouchableOpacity>
           </View>
@@ -97,6 +74,7 @@ const LoginScreen: React.FC = () => {
         </View>
 
         <View style={styles.socialButtonsContainer}>
+          {/* Aquí deberías usar el componente SocialButton que mencionaste */}
           <TouchableOpacity
             style={styles.socialButton}
             onPress={() => handleSocialLogin("Google")}
@@ -114,7 +92,6 @@ const LoginScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.background },
@@ -143,15 +120,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.separator,
   },
-  loginButton: {
-    height: 50,
-    backgroundColor: COLORS.accent,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: { color: COLORS.primaryText, fontSize: 18, fontWeight: "bold" },
   linkContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

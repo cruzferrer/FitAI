@@ -1,166 +1,82 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import React from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { supabase } from "../../constants/supabaseClient";
 import { COLORS } from "../../constants/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Opciones predefinidas para el formulario (Datos clave para el motor de IA)
-const OPTIONS = {
-  objective: ["Fuerza", "Hipertrofia", "Mixto"],
-  experience: ["Principiante", "Intermedio", "Avanzado"],
-  days: [3, 4, 5, 6],
-  equipment: ["Gimnasio completo", "Mancuernas y casa", "Solo peso corporal"],
-};
+import PrimaryButton from "../../components/Buttons/PrimaryButton";
+import OptionSelector from "../../components/Form/OptionSelector";
+// Importamos el nuevo hook
+import { useOnboarding, OPTIONS } from "../../hooks/auth/useOnboarding";
 
 const OnboardingScreen: React.FC = () => {
-  const router = useRouter();
-
-  // Estados para capturar las selecciones del usuario
-  const [objective, setObjective] = useState<string | null>(null);
-  const [experience, setExperience] = useState<string | null>(null);
-  const [days, setDays] = useState<number | null>(null);
-  const [equipment, setEquipment] = useState<string | null>(null);
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleGenerateRoutine = async () => {
-    if (!objective || !experience || !days || !equipment) {
-      Alert.alert("Faltan Datos", "Por favor, completa todas las selecciones.");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      //El objeto de configuración va directamente en el segundo argumento
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "generar-rutina", // Primer argumento: nombre de la función
-        {
-          // Segundo argumento: objeto de configuración
-          method: "POST",
-          body: {
-            user_objective: objective,
-            user_experience: experience,
-            available_days: days,
-            user_equipment: equipment,
-          },
-        }
-      );
-      if (invokeError) {
-        throw new Error(invokeError.message);
-      }
-      if (data && data.error) {
-        throw new Error(data.error);
-      }
-
-      const jsonOutput = data;
-
-      await AsyncStorage.setItem(
-        "@FitAI_UserRoutine",
-        JSON.stringify(jsonOutput)
-      );
-
-
-      Alert.alert(
-        "¡IA Conectada!",
-        "Rutina generada. Revisa la consola o guarda los datos."
-      );
-
-      //Nos movemos a la pantalla principal
-      router.replace("/(tabs)");
-      
-    } catch (error) {
-      let errorMessage = "Error desconocido o de red.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      // Este catch maneja el error de red o el error lanzado por invokeError.
-      Alert.alert(
-        "Error de IA",
-        `El servidor falló: ${errorMessage}. Revisa la clave ANON.`
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  // Función auxiliar para renderizar los botones de opción
-  const renderOptionButtons = (
-    key: keyof typeof OPTIONS,
-    setValue: (v: any) => void,
-    currentValue: any
-  ) => (
-    <View style={styles.buttonGroup}>
-      {OPTIONS[key].map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          style={[
-            styles.optionButton,
-            currentValue === item && styles.optionButtonActive,
-          ]}
-          onPress={() => setValue(item)}
-          disabled={isLoading}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              currentValue === item && styles.optionTextActive,
-            ]}
-          >
-            {item}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+  // Consumimos el hook
+  const { state, setters, handleGenerateRoutine } = useOnboarding();
+  const {
+    objective,
+    experience,
+    days,
+    equipment,
+    notation,
+    isLoading,
+    isFormComplete,
+  } = state;
+  const { setObjective, setExperience, setDays, setEquipment, setNotation } =
+    setters;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>¡Hola! Configura FitAI 🤖</Text>
         <Text style={styles.subHeader}>
-          Necesitamos estos datos para generar tu Mesociclo de 6 semanas.
+          Necesitamos estos datos para generar tu Mesociclo.
         </Text>
 
-        {/* 1. Objetivo Principal */}
         <Text style={styles.label}>1. ¿Cuál es tu objetivo principal?</Text>
-        {renderOptionButtons("objective", setObjective, objective)}
+        <OptionSelector
+          options={OPTIONS.objective}
+          selectedValue={objective}
+          onSelect={(val) => setObjective(val as string)}
+          disabled={isLoading}
+        />
 
-        {/* 2. Nivel de Experiencia */}
         <Text style={styles.label}>2. ¿Cuál es tu nivel de experiencia?</Text>
-        {renderOptionButtons("experience", setExperience, experience)}
+        <OptionSelector
+          options={OPTIONS.experience}
+          selectedValue={experience}
+          onSelect={(val) => setExperience(val as string)}
+          disabled={isLoading}
+        />
 
-        {/* 3. Días de Entrenamiento */}
         <Text style={styles.label}>3. Días disponibles a la semana:</Text>
-        {renderOptionButtons("days", setDays, days)}
+        <OptionSelector
+          options={OPTIONS.days}
+          selectedValue={days}
+          onSelect={(val) => setDays(val as number)}
+          disabled={isLoading}
+        />
 
-        {/* 4. Equipamiento Disponible */}
         <Text style={styles.label}>4. Equipamiento Disponible:</Text>
-        {renderOptionButtons("equipment", setEquipment, equipment)}
+        <OptionSelector
+          options={OPTIONS.equipment}
+          selectedValue={equipment}
+          onSelect={(val) => setEquipment(val as string)}
+          disabled={isLoading}
+        />
 
-        {/* Botón de Generación */}
-        <TouchableOpacity
-          style={styles.generateButton}
+        <Text style={styles.label}>5. Preferencia de Notación:</Text>
+        <OptionSelector
+          options={OPTIONS.notation}
+          selectedValue={notation}
+          onSelect={(val) => setNotation(val as string)}
+          disabled={isLoading}
+        />
+
+        <PrimaryButton
+          title="Generar Rutina con IA"
           onPress={handleGenerateRoutine}
-          disabled={
-            isLoading || !objective || !experience || !days || !equipment
-          }
-        >
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.background} />
-          ) : (
-            <Text style={styles.generateButtonText}>Generar Rutina con IA</Text>
-          )}
-        </TouchableOpacity>
+          isLoading={isLoading}
+          disabled={!isFormComplete}
+          style={{ marginTop: 40 }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -182,39 +98,6 @@ const styles = StyleSheet.create({
     color: COLORS.primaryText,
     marginTop: 20,
     marginBottom: 10,
-  },
-  buttonGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 10,
-  },
-  optionButton: {
-    backgroundColor: COLORS.inputBackground,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.separator,
-  },
-  optionButtonActive: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
-  },
-  optionText: { color: COLORS.primaryText, fontWeight: "500" },
-  optionTextActive: { color: COLORS.background, fontWeight: "bold" },
-  generateButton: {
-    backgroundColor: COLORS.accent,
-    padding: 15,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 40,
-  },
-  generateButtonText: {
-    color: COLORS.background,
-    fontSize: 18,
-    fontWeight: "bold",
   },
 });
 
