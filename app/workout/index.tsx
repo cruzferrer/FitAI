@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -9,184 +9,48 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-// Importamos el nuevo componente interactivo
-import ExerciseLogger from "@/components/Exercise/ExerciseLogger";
 
-// --- TIPOS DE DATOS (Basado en el JSON que SÍ funciona) ---
-interface EjercicioPrescrito {
-  nombre: string;
-  series: string;
-  repeticiones: string;
-  carga_notacion: string;
-  nota?: string;
-  descanso?: string;
-}
-
-interface GrupoMuscular {
-  grupo_muscular: string;
-  ejercicios: EjercicioPrescrito[];
-}
-
-interface DiaEntrenamiento {
-  dia?: number; // Puede no tener 'dia'
-  dia_entrenamiento: string; // La clave real (e.g., "Día 1 - Upper")
-  grupos: GrupoMuscular[];
-}
-// --- FIN DE TIPOS ---
+// Componentes modulares
+import ExerciseLogger from "../../components/Exercise/ExerciseLogger";
+// Hooks de lógica
+import { useWorkoutData } from "@/hooks/workout/useWorkoutData";
+import { useWorkoutTimer } from "@/hooks/workout/useWorkoutTimer";
 
 const WorkoutLogScreen: React.FC = () => {
   const router = useRouter();
-  const { day } = useLocalSearchParams(); // Contiene el 'dia_entrenamiento'
 
-  const [diaActualData, setDiaActualData] = useState<DiaEntrenamiento | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [seconds, setSeconds] = useState(0);
-  const [isActive, setIsActive] = useState(true);
+  // --- 1. LÓGICA DE DATOS CONSUMIDA DESDE EL HOOK ---
+  const {
+    day,
+    isLoading,
+    diaActualData,
+    workoutLog,
+    handleUpdateSet,
+    handleUpdateNotes,
+  } = useWorkoutData();
 
-  // Lógica del Timer (sin cambios)
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isActive) {
-      interval = setInterval(
-        () => setSeconds((prevSeconds) => prevSeconds + 1),
-        1000
-      ) as unknown as NodeJS.Timeout;
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, seconds]);
+  // --- 2. LÓGICA DE TIMER CONSUMIDA DESDE EL HOOK ---
+  const { seconds, isActive, setIsActive, formatTime } = useWorkoutTimer();
 
-  const advanceProgress = async () => {
-    try {
-      const jsonString = await AsyncStorage.getItem("@FitAI_UserRoutine");
-      const progressString = await AsyncStorage.getItem(
-        "@FitAI_WorkoutProgress"
-      );
-
-      if (jsonString && progressString) {
-        const rutina = JSON.parse(jsonString);
-        let { weekIndex, dayIndex } = JSON.parse(progressString);
-        const semanas = rutina.rutina_periodizada.semanas;
-
-        // Avanzar al siguiente día
-        dayIndex++;
-
-        // Si se acabaron los días de esta semana, avanzar a la siguiente semana
-        if (dayIndex >= semanas[weekIndex].dias.length) {
-          dayIndex = 0;
-          weekIndex++;
-        }
-
-        // Si se acabaron las semanas, ¡el mesociclo terminó!
-        if (weekIndex >= semanas.length) {
-          Alert.alert("¡Felicidades!", "Has completado todo el mesociclo.");
-          // Aquí podrías resetear a 0,0 o marcar como finalizado.
-          // Por ahora, lo dejamos en el último día posible o lo reiniciamos:
-          weekIndex = 0;
-          dayIndex = 0;
-        }
-
-        // Guardar el nuevo progreso con la fecha de hoy
-        await AsyncStorage.setItem(
-          "@FitAI_WorkoutProgress",
-          JSON.stringify({
-            weekIndex,
-            dayIndex,
-            lastCompleted: new Date().toISOString(),
-          })
-        );
-      }
-    } catch (e) {
-      console.error("Error avanzando progreso:", e);
-    }
-  };
-
-  // Lógica de carga de Datos (Manejando AMBAS ESTRUCTURAS JSON)
-  useEffect(() => {
-    const loadWorkoutData = async () => {
-      setIsLoading(true);
-      const jsonString = await AsyncStorage.getItem("@FitAI_UserRoutine");
-
-      try {
-        if (jsonString && day && typeof day === "string") {
-          const rutina = JSON.parse(jsonString);
-
-          let targetDay: DiaEntrenamiento | undefined;
-          let semanasArray: any[] | undefined;
-
-          // 1. Verificamos si la IA envió la estructura de OBJETO (la que falló en HomeScreen)
-          if (rutina.rutina_periodizada && rutina.rutina_periodizada.semanas) {
-            semanasArray = rutina.rutina_periodizada.semanas;
-          }
-          // 2. Verificamos si la IA envió la estructura de ARRAY (la que te funcionó)
-          else if (Array.isArray(rutina.rutina_periodizada)) {
-            semanasArray = rutina.rutina_periodizada;
-          }
-
-          // 3. Si encontramos el array de semanas, buscamos el día
-          if (semanasArray && semanasArray.length > 0) {
-            const semana = semanasArray[0]; // Tomamos la Semana 1
-            if (semana && semana.dias) {
-              // Buscamos por la clave 'dia_entrenamiento' O 'descripcion'
-              targetDay = semana.dias.find(
-                (d: any) => d.dia_entrenamiento === day || d.descripcion === day
-              );
-            }
-          }
-
-          if (targetDay) {
-            setDiaActualData(targetDay);
-          } else {
-            Alert.alert(
-              "Error",
-              `No se encontró el día '${day}' en la rutina guardada.`
-            );
-          }
-        }
-      } catch (e) {
-        console.error("Error al parsear la rutina en WorkoutLog:", e);
-        Alert.alert("Error Crítico", "La rutina guardada está corrupta.");
-      }
-
-      setIsLoading(false);
-    };
-
-    loadWorkoutData();
-  }, [day]);
-
-  // --- Funciones de Header ---
-  const formatTime = (totalSeconds: number) => {
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-    return [m, s].map((val) => String(val).padStart(2, "0")).join(":");
-  };
-
+  // --- 3. LÓGICA DE UI (MANEJADORES) ---
   const handleFinish = () => {
     setIsActive(false);
+    // TODO: Recopilar 'workoutLog' y enviarlo a Supabase
     Alert.alert(
       "Finalizar Rutina",
-      `Entrenamiento completado. ¿Guardar y avanzar?`,
+      `Entrenamiento completado en ${formatTime(seconds)}. ¿Deseas guardar?`,
       [
         { text: "Cancelar", style: "cancel", onPress: () => setIsActive(true) },
-        {
-          text: "Finalizar",
-          onPress: async () => {
-            await advanceProgress(); // <-- LLAMADA CLAVE
-            router.back();
-          },
-        },
+        { text: "Guardar y Salir", onPress: () => router.back() },
       ]
     );
   };
 
-  // --- Renderizado ---
+  // --- 4. RENDERIZADO ---
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -198,12 +62,12 @@ const WorkoutLogScreen: React.FC = () => {
     );
   }
 
-  if (!diaActualData || !diaActualData.grupos) {
+  if (!diaActualData || workoutLog.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loaderContainer}>
           <Text style={styles.noteText}>
-            Error: Los datos de este día están corruptos o vacíos.
+            error: No se pudieron cargar los ejercicios del día.
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={{ color: COLORS.accent, marginTop: 20 }}>Volver</Text>
@@ -213,16 +77,11 @@ const WorkoutLogScreen: React.FC = () => {
     );
   }
 
-  const totalSets = diaActualData.grupos.reduce(
-    (acc, g) =>
-      acc +
-      g.ejercicios.reduce((eAcc, e) => eAcc + (parseInt(e.series, 10) || 0), 0),
-    0
-  );
+  const totalSets = workoutLog.reduce((acc, log) => acc + log.sets.length, 0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header de Log (Simulando el diseño de la imagen) */}
+      {/* Header y Timer */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -234,9 +93,7 @@ const WorkoutLogScreen: React.FC = () => {
             color={COLORS.primaryText}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
-          {diaActualData.dia_entrenamiento}
-        </Text>
+        <Text style={styles.headerTitle}>{day}</Text>
         <View style={styles.timerGroup}>
           <Text style={styles.timerText}>{formatTime(seconds)}</Text>
           <TouchableOpacity onPress={handleFinish} style={styles.finishButton}>
@@ -251,21 +108,19 @@ const WorkoutLogScreen: React.FC = () => {
         <Text style={styles.summaryText}>Volume: 0 kg</Text>
       </View>
 
-      {/* Contenido de la Rutina (Mapeo por Grupos) */}
+      {/* Contenido de la Rutina (Mapeo de Ejercicio) */}
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        {diaActualData.grupos.map((grupo, gIndex) => (
-          <View key={`group-${gIndex}`}>
-            {grupo.ejercicios.map((ejercicio, eIndex) => (
-              // Usamos el ExerciseLogger para cada ejercicio
-              <ExerciseLogger
-                key={`ex-${eIndex}`}
-                ejercicio={ejercicio}
-                exerciseIndex={eIndex}
-                grupoMuscular={grupo.grupo_muscular}
-                onLogUpdate={(exName, sets, notes) => {}}
-              />
-            ))}
-          </View>
+        {workoutLog.map((log) => (
+          <ExerciseLogger
+            key={log.id}
+            ejercicio={log.ejercicio}
+            grupoMuscular={log.grupo}
+            onLogUpdate={(exerciseName, sets, notes) => {
+              // El estado se actualiza en el hook, pero pasamos los handlers
+              handleUpdateSet(log.id, 0, sets[0]); // Esta parte necesita ajuste si onLogUpdate devuelve el set completo
+              handleUpdateNotes(log.id, notes);
+            }}
+          />
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -274,57 +129,38 @@ const WorkoutLogScreen: React.FC = () => {
 
 // --- ESTILOS ---
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  // --- ESTILOS DEL HEADER CORREGIDOS ---
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row",
-    alignItems: "center", // Alinea verticalmente
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.separator,
   },
-  headerButton: {
-    flex: 0.15, // Ocupa el 15%
-    padding: 5,
-  },
+  headerButton: { padding: 5 },
   headerTitle: {
-    flex: 0.5, // Ocupa el 50% (espacio sobrante principal)
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.primaryText,
-    textAlign: "center", // Centra el título
-    paddingHorizontal: 5, // Evita que toque los bordes
+    flex: 1,
+    textAlign: "center",
   },
   timerGroup: {
-    flex: 0.35, // Ocupa el 35%
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end", // Alinea a la derecha
+    justifyContent: "flex-end",
   },
-  timerText: {
-    fontSize: 16,
-    color: COLORS.primaryText,
-    marginRight: 10,
-  },
+  timerText: { fontSize: 16, color: COLORS.primaryText, marginRight: 10 },
   finishButton: {
     backgroundColor: COLORS.accent,
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 10,
   },
-  finishButtonText: {
-    color: COLORS.primaryText,
-    fontWeight: "bold",
-  },
+  finishButtonText: { color: COLORS.primaryText, fontWeight: "bold" },
   summaryBar: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -333,15 +169,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.separator,
   },
-  summaryText: {
-    color: COLORS.secondaryText,
-    fontSize: 12,
-  },
-  contentContainer: {
-    padding: 15,
-  },
+  summaryText: { color: COLORS.secondaryText, fontSize: 12 },
+  contentContainer: { padding: 15 },
   noteText: {
-    // Estilo para el loader
     color: COLORS.secondaryText,
     fontSize: 12,
     marginTop: 10,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -12,47 +12,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
-
-interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "bot";
-}
+import { useChat, Message } from "../../hooks/tabs/useChat"; // <-- NUEVO HOOK
 
 const ChatScreen: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hola! Soy FitAI, tu asistente inteligente de entrenamiento. Pregúntame sobre tu rutina, nutrición o técnica de ejercicios.",
-      sender: "bot",
-    },
-  ]);
-  const [inputText, setInputText] = useState("");
-
-  const handleSend = () => {
-    if (inputText.trim() === "") return;
-
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
-      sender: "user",
-    };
-
-    // 1. Añadir el mensaje del usuario
-    setMessages((prev) => [...prev, newUserMessage]);
-
-    // 2. Simular la respuesta de la IA
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: Date.now().toString() + "bot",
-        text: `(IA) Entendido: "${newUserMessage.text}". Aquí iría la respuesta generada por Gemini API...`,
-        sender: "bot",
-      };
-      setMessages((prev) => [...prev, botResponse]);
-    }, 1000);
-
-    setInputText("");
-  };
+  // Consumimos el hook
+  const { messages, inputText, setInputText, handleSend, isLoading } =
+    useChat();
 
   const renderMessage = ({ item }: { item: Message }) => (
     <View
@@ -80,11 +45,10 @@ const ChatScreen: React.FC = () => {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0} // Ajuste para la barra de pestañas
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         <Text style={styles.headerTitle}>Chatbot Fit AI</Text>
 
-        {/* Lista de Mensajes */}
         <FlatList
           data={messages}
           renderItem={renderMessage}
@@ -103,8 +67,13 @@ const ChatScreen: React.FC = () => {
             onChangeText={setInputText}
             onSubmitEditing={handleSend}
             returnKeyType="send"
+            editable={!isLoading}
           />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+          <TouchableOpacity
+            style={[styles.sendButton, isLoading && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={isLoading}
+          >
             <MaterialCommunityIcons
               name="send"
               size={24}
@@ -118,13 +87,8 @@ const ChatScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    flex: 1,
-  },
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
   headerTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -134,10 +98,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.separator,
   },
-  messageList: {
-    paddingHorizontal: 10,
-    paddingTop: 10,
-  },
+  messageList: { paddingHorizontal: 10, paddingTop: 10 },
   messageContainer: {
     padding: 10,
     borderRadius: 15,
@@ -145,23 +106,19 @@ const styles = StyleSheet.create({
     maxWidth: "80%",
   },
   userMessageContainer: {
-    backgroundColor: COLORS.accent, // Mensajes del usuario en color de acento
+    backgroundColor: COLORS.accent,
     alignSelf: "flex-end",
     borderBottomRightRadius: 2,
   },
   botMessageContainer: {
-    backgroundColor: COLORS.inputBackground, // Mensajes del bot en color de input
+    backgroundColor: COLORS.inputBackground,
     alignSelf: "flex-start",
     borderBottomLeftRadius: 2,
     borderWidth: 1,
     borderColor: COLORS.separator,
   },
-  userMessageText: {
-    color: COLORS.primaryText, // Texto blanco
-  },
-  botMessageText: {
-    color: COLORS.primaryText, // Texto blanco
-  },
+  userMessageText: { color: COLORS.primaryText },
+  botMessageText: { color: COLORS.primaryText },
   inputContainer: {
     flexDirection: "row",
     padding: 10,
@@ -185,6 +142,9 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
+  },
+  sendButtonDisabled: {
+    backgroundColor: COLORS.separator,
   },
 });
 

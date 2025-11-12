@@ -1,105 +1,26 @@
-import React, { useState } from "react";
-import { Text, StyleSheet, ScrollView, Alert } from "react-native";
+import React from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { supabase } from "../../constants/supabaseClient";
 import { COLORS } from "../../constants/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import PrimaryButton from "../../components/Buttons/PrimaryButton";
 import OptionSelector from "../../components/Form/OptionSelector";
-import PrimaryButton from "@/components/Buttons/PrimaryButton";
-
-const OPTIONS = {
-  objective: ["Fuerza", "Hipertrofia", "Mixto"],
-  experience: ["Principiante", "Intermedio", "Avanzado"],
-  days: [3, 4, 5, 6],
-  equipment: ["Gimnasio completo", "Mancuernas y casa", "Solo peso corporal"],
-  // --- AÑADIR ESTO ---
-  notation: ["RPE / RIR (Moderno)", "Tradicional (Al Fallo)"],
-};
+// Importamos el nuevo hook
+import { useOnboarding, OPTIONS } from "../../hooks/auth/useOnboarding";
 
 const OnboardingScreen: React.FC = () => {
-  const router = useRouter();
-  const [objective, setObjective] = useState<string | null>(null);
-  const [experience, setExperience] = useState<string | null>(null);
-  const [days, setDays] = useState<number | null>(null);
-  const [equipment, setEquipment] = useState<string | null>(null);
-  const [notation, setNotation] = useState<string | null>(
-    "Tradicional (Al Fallo)"
-  );
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleGenerateRoutine = async () => {
-    // --- ACTUALIZAR VALIDACIÓN ---
-    if (!objective || !experience || !days || !equipment || !notation) {
-      Alert.alert("Faltan Datos", "Por favor, completa todas las selecciones.");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "generar-rutina",
-        {
-          method: "POST",
-          body: {
-            user_objective: objective,
-            user_experience: experience,
-            available_days: days,
-            user_equipment: equipment,
-            user_notation: notation, // <-- ENVIAR LA NUEVA VARIABLE
-          },
-        }
-      );
-
-      if (invokeError) {
-        throw new Error(invokeError.message);
-      }
-
-      if (data && data.error) {
-        throw new Error(data.error);
-      }
-
-      const jsonOutput = data;
-
-      // Guardar el JSON
-      await AsyncStorage.setItem(
-        "@FitAI_UserRoutine",
-        JSON.stringify(jsonOutput)
-      );
-
-      // Inicializar el progreso (Semana 0, Día 0)
-      await AsyncStorage.setItem(
-        "@FitAI_WorkoutProgress",
-        JSON.stringify({
-          weekIndex: 0,
-          dayIndex: 0,
-          lastCompleted: null,
-        })
-      );
-
-      Alert.alert(
-        "¡IA Conectada!",
-        "Rutina generada. Revisa la consola o guarda los datos."
-      );
-      console.log(JSON.stringify(jsonOutput, null, 2));
-
-      router.replace("/(tabs)");
-    } catch (error) {
-      let errorMessage = "Error desconocido o de red.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      Alert.alert(
-        "Error de IA",
-        `El servidor falló: ${errorMessage}. Revisa la clave ANON.`
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Función auxiliar para renderizar los botones de opción
+  // Consumimos el hook
+  const { state, setters, handleGenerateRoutine } = useOnboarding();
+  const {
+    objective,
+    experience,
+    days,
+    equipment,
+    notation,
+    isLoading,
+    isFormComplete,
+  } = state;
+  const { setObjective, setExperience, setDays, setEquipment, setNotation } =
+    setters;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -109,7 +30,6 @@ const OnboardingScreen: React.FC = () => {
           Necesitamos estos datos para generar tu Mesociclo.
         </Text>
 
-        {/* --- 3. USAR EL NUEVO COMPONENTE --- */}
         <Text style={styles.label}>1. ¿Cuál es tu objetivo principal?</Text>
         <OptionSelector
           options={OPTIONS.objective}
@@ -149,15 +69,15 @@ const OnboardingScreen: React.FC = () => {
           onSelect={(val) => setNotation(val as string)}
           disabled={isLoading}
         />
+
+        <PrimaryButton
+          title="Generar Rutina con IA"
+          onPress={handleGenerateRoutine}
+          isLoading={isLoading}
+          disabled={!isFormComplete}
+          style={{ marginTop: 40 }}
+        />
       </ScrollView>
-      <PrimaryButton
-        title="Generar Rutina con IA"
-        onPress={handleGenerateRoutine}
-        isLoading={isLoading}
-        disabled={!objective || !experience || !days || !equipment || !notation}
-        // Opcional: Si el botón tiene un estilo diferente en el Onboarding (margen, etc.), puedes pasarlo
-        style={{ marginTop: 40 }}
-      />
     </SafeAreaView>
   );
 };
@@ -179,26 +99,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-  buttonGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 10,
-  },
-  optionButton: {
-    backgroundColor: COLORS.inputBackground,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.separator,
-  },
-  optionButtonActive: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
-  },
-  optionText: { color: COLORS.primaryText, fontWeight: "500" },
-  optionTextActive: { color: COLORS.background, fontWeight: "bold" },
 });
 
 export default OnboardingScreen;

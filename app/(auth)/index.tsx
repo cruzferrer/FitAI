@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -11,32 +11,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { COLORS } from "../../constants/theme";
-import { useAuth } from "../../hooks/useAuth";
-import PrimaryButton from "@/components/Buttons/PrimaryButton";
+import PrimaryButton from "../../components/Buttons/PrimaryButton";
+import { useLogin } from "../../hooks/auth/useLogin"; // <-- NUEVO HOOK
 
 const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const router = useRouter();
-  const { signIn } = useAuth();
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor, ingresa tu correo y contraseña.");
-      return;
-    }
-    setIsLoading(true);
-    const { error } = await signIn(email, password);
-
-    setIsLoading(false);
-
-    if (error) {
-      Alert.alert("Error de Login", error.message);
-    }
-    router.replace("/(auth)/onboarding");
-  };
+  const { email, setEmail, password, setPassword, isLoading, handleLogin } =
+    useLogin();
 
   const handleSocialLogin = (provider: "Google" | "Apple") => {
     Alert.alert("Pendiente", `Login con ${provider} pendiente.`);
@@ -76,11 +57,11 @@ const LoginScreen: React.FC = () => {
 
           <View style={styles.linkContainer}>
             <TouchableOpacity
-              onPress={() => router.push(`/(auth)/forgot-password`)}
+              onPress={() => router.push("/(auth)/forgot-password")}
             >
               <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push(`/(auth)/register`)}>
+            <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
               <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
             </TouchableOpacity>
           </View>
@@ -93,6 +74,7 @@ const LoginScreen: React.FC = () => {
         </View>
 
         <View style={styles.socialButtonsContainer}>
+          {/* Aquí deberías usar el componente SocialButton que mencionaste */}
           <TouchableOpacity
             style={styles.socialButton}
             onPress={() => handleSocialLogin("Google")}
@@ -142,6 +124,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
+    marginTop: 15,
   },
   linkText: {
     color: COLORS.accent,
