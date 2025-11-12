@@ -54,7 +54,6 @@ const ChatScreen: React.FC = () => {
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messageList}
-          inverted // Muestra los mensajes más nuevos abajo
         />
 
         {/* Área de Input */}

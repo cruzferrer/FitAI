@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { Alert } from "react-native";
+// Asumiremos que creas una función 'chatbot-query' en Supabase para manejar el LLM
+import { supabase } from "@/constants/supabaseClient";
 
 export interface Message {
   id: string;
@@ -17,7 +20,7 @@ export const useChat = () => {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (inputText.trim() === "") return;
 
     const newUserMessage: Message = {
@@ -30,16 +33,39 @@ export const useChat = () => {
     setInputText("");
     setIsLoading(true); // El bot está "pensando"
 
-    // Simular la respuesta de la IA (futura llamada a Edge Function)
-    setTimeout(() => {
+    try {
+      // 🚨 LLAMADA REAL A LA EDGE FUNCTION
+      const { data, error: invokeError } = await supabase.functions.invoke(
+        "chatbot-query",
+        {
+          method: "POST",
+          body: {
+            user_prompt: newUserMessage.text,
+            // Puedes pasar el historial de mensajes si quieres que tenga contexto
+            // conversation_history: messages.slice(-5)
+          },
+        }
+      );
+
+      if (invokeError) throw new Error(invokeError.message);
+
+      // Asumimos que la Edge Function devuelve { response: "..." }
       const botResponse: Message = {
         id: Date.now().toString() + "bot",
-        text: `(Respuesta IA) Entendido: "${newUserMessage.text}". Aún estoy aprendiendo a chatear.`,
+        text:
+          data.response || "Lo siento, la IA no pudo procesar tu solicitud.",
         sender: "bot",
       };
       setMessages((prev) => [...prev, botResponse]);
+    } catch (e: any) {
+      Alert.alert("Error de Chatbot", e.message);
+      setMessages((prev) => [
+        ...prev,
+        { id: "error", text: "Error de conexión con la IA.", sender: "bot" },
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return { messages, inputText, setInputText, handleSend, isLoading };

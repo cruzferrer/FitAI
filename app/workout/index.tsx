@@ -18,6 +18,7 @@ import ExerciseLogger from "../../components/Exercise/ExerciseLogger";
 // Hooks de lógica
 import { useWorkoutData } from "@/hooks/workout/useWorkoutData";
 import { useWorkoutTimer } from "@/hooks/workout/useWorkoutTimer";
+import { useWorkoutLogger } from "@/hooks/workout/useWorkoutLogger";
 
 const WorkoutLogScreen: React.FC = () => {
   const router = useRouter();
@@ -32,19 +33,31 @@ const WorkoutLogScreen: React.FC = () => {
     handleUpdateNotes,
   } = useWorkoutData();
 
+  const { saveWorkoutLog } = useWorkoutLogger();
+
   // --- 2. LÓGICA DE TIMER CONSUMIDA DESDE EL HOOK ---
   const { seconds, isActive, setIsActive, formatTime } = useWorkoutTimer();
 
   // --- 3. LÓGICA DE UI (MANEJADORES) ---
   const handleFinish = () => {
     setIsActive(false);
-    // TODO: Recopilar 'workoutLog' y enviarlo a Supabase
+
     Alert.alert(
       "Finalizar Rutina",
       `Entrenamiento completado en ${formatTime(seconds)}. ¿Deseas guardar?`,
       [
         { text: "Cancelar", style: "cancel", onPress: () => setIsActive(true) },
-        { text: "Guardar y Salir", onPress: () => router.back() },
+        {
+          text: "Guardar y Salir",
+          onPress: async () => {
+            const saved = await saveWorkoutLog(Math.round(seconds / 60)); // Guarda el log
+            if (saved) {
+              // Aquí iría la lógica para avanzar el puntero de progreso.
+              // await advanceProgress();
+              router.back();
+            }
+          },
+        },
       ]
     );
   };

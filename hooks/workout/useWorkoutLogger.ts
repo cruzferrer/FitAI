@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams } from "expo-router";
+import { useAuth } from "../auth/useAuth";
+import { supabase } from "../../constants/supabaseClient";
 
 // --- TIPOS DE DATOS ---
 // (Estos tipos deben coincidir con tu JSON de la IA y el estado interactivo)
@@ -52,7 +54,8 @@ interface RutinaGenerada {
 
 // --- EL HOOK ---
 export const useWorkoutLogger = () => {
-  const { day } = useLocalSearchParams<{ day: string }>(); // Obtiene el 'Día 1 - ...'
+  const { day } = useLocalSearchParams<{ day: string }>();
+  const { session } = useAuth();
   const [workoutLog, setWorkoutLog] = useState<ExerciseLog[]>([]);
   const [diaActualData, setDiaActualData] = useState<DiaEntrenamiento | null>(
     null
@@ -132,7 +135,43 @@ export const useWorkoutLogger = () => {
     };
 
     loadWorkoutData();
-  }, [day]); // Se recarga si cambia el día
+  }, [day]);
+  const saveWorkoutLog = async (durationMinutes: number) => {
+    const userId = session?.user?.id;
+    if (!userId) {
+      Alert.alert(
+        "Error",
+        "Debes iniciar sesión para guardar tu entrenamiento."
+      );
+      return;
+    }
+
+    // Simulación: Cálculo de Fatiga Muscular (para la tabla historial_sesiones)
+    // La IA avanzada lo haría por ti, aquí usamos una simulación
+    const musculosFatigaMock = {
+      Pecho: Math.floor(Math.random() * 50) + 50, // 50-100
+      Espalda: Math.floor(Math.random() * 50) + 50,
+      Piernas: Math.floor(Math.random() * 50) + 50,
+    };
+
+    const { error } = await supabase.from("historial_sesiones").insert({
+      user_id: userId,
+      duracion_minutos: durationMinutes,
+      nombre_dia: day!,
+      musculos_fatiga: musculosFatigaMock,
+      log_series: workoutLog, // Guardamos el estado completo de las series
+    });
+
+    if (error) {
+      Alert.alert(
+        "Error de DB",
+        "No se pudo guardar el historial: " + error.message
+      );
+      console.error(error);
+      return false;
+    }
+    return true;
+  };
 
   // --- Manejadores de Estado ---
 
@@ -165,6 +204,7 @@ export const useWorkoutLogger = () => {
   };
 
   return {
+    saveWorkoutLog,
     day,
     isLoading,
     diaActualData, // Datos originales (para el nombre, etc.)
