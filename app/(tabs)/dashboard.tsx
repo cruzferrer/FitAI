@@ -11,10 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { COLORS } from "../../constants/theme";
 import { useAuth } from "../../hooks/auth/useAuth";
-import * as Progress from "react-native-progress";
 
 import PlanCard from "../../components/Dashboard/PlanCard";
 import CalorieWidget from "../../components/Dashboard/CalorieWidget";
+import GradientCircleProgress from "../../components/Dashboard/GradientCircleProgress";
 import { useDashboardData } from "../../hooks/tabs/useDashboardData"; // <-- NUEVO HOOK
 
 const DashboardScreen: React.FC = () => {
@@ -99,17 +99,12 @@ const DashboardScreen: React.FC = () => {
             <Text style={styles.greeting}>Good Morning,</Text>
             <Text style={styles.userName}>{userName}!</Text>
           </View>
-          <Progress.Circle
-            size={60}
-            progress={dailyTotalProgress}
-            showsText
-            formatText={() => `${Math.round(dailyTotalProgress * 100)}%`}
-            textStyle={styles.progressText}
-            color={COLORS.accent}
-            unfilledColor={COLORS.inputBackground}
-            borderWidth={0}
-            thickness={6}
-          />
+            <GradientCircleProgress
+              size={60}
+              progress={dailyTotalProgress}
+              textContent={`${Math.round(dailyTotalProgress * 100)}%`}
+              textStyle={styles.progressText}
+            />
         </View>
 
         {/* TODAY'S PLAN */}
