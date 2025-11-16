@@ -33,10 +33,10 @@ const WorkoutLogScreen: React.FC = () => {
     handleUpdateNotes,
   } = useWorkoutData();
 
-  const { saveWorkoutLog } = useWorkoutLogger();
+  const { saveWorkoutLog, advanceProgress } = useWorkoutLogger();
 
   // --- 2. LÓGICA DE TIMER CONSUMIDA DESDE EL HOOK ---
-  const { seconds, isActive, setIsActive, formatTime } = useWorkoutTimer();
+  const { seconds, setIsActive, formatTime } = useWorkoutTimer();
 
   // --- 3. LÓGICA DE UI (MANEJADORES) ---
   const handleFinish = () => {
@@ -52,8 +52,12 @@ const WorkoutLogScreen: React.FC = () => {
           onPress: async () => {
             const saved = await saveWorkoutLog(Math.round(seconds / 60)); // Guarda el log
             if (saved) {
-              // Aquí iría la lógica para avanzar el puntero de progreso.
-              // await advanceProgress();
+              // Avanzamos el progreso local y luego volvemos
+              try {
+                await advanceProgress();
+              } catch (e) {
+                console.warn("No se pudo avanzar progreso:", e);
+              }
               router.back();
             }
           },

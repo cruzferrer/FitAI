@@ -143,7 +143,7 @@ export const useWorkoutLogger = () => {
         "Error",
         "Debes iniciar sesión para guardar tu entrenamiento."
       );
-      return;
+      return false;
     }
 
     // Simulación: Cálculo de Fatiga Muscular (para la tabla historial_sesiones)
@@ -154,6 +154,7 @@ export const useWorkoutLogger = () => {
       Piernas: Math.floor(Math.random() * 50) + 50,
     };
 
+    // Transacción: guardar historial PRIMERO (operación crítica)
     const { error } = await supabase.from("historial_sesiones").insert({
       user_id: userId,
       duracion_minutos: durationMinutes,
@@ -170,7 +171,100 @@ export const useWorkoutLogger = () => {
       console.error(error);
       return false;
     }
+
+    // Si el historial se guardó OK, la operación fue exitosa
     return true;
+  };
+
+  // Avanza el progreso local guardado en AsyncStorage ("@FitAI_WorkoutProgress").
+  // Lógica:
+  // - Lee el progreso actual y la rutina guardada (@FitAI_UserRoutine)
+  // - Incrementa dayIndex; si supera el número de días de la semana actual, pasa a la siguiente semana
+  // - Actualiza lastCompleted con la fecha actual
+  const advanceProgress = async () => {
+    try {
+      const progStr = await AsyncStorage.getItem("@FitAI_WorkoutProgress");
+      const routineStr = await AsyncStorage.getItem("@FitAI_UserRoutine");
+
+      if (!routineStr) {
+        console.warn("No hay rutina guardada para avanzar progreso");
+        return null;
+      }
+
+      const rutina = JSON.parse(routineStr);
+      const progress = progStr
+        ? JSON.parse(progStr)
+        : { weekIndex: 0, dayIndex: 0, lastCompleted: null };
+
+      const semanas = rutina.rutina_periodizada || [];
+      const currentWeekIndex = Math.max(0, progress.weekIndex || 0);
+      const currentDayIndex = Math.max(0, progress.dayIndex || 0);
+
+      if (!Array.isArray(semanas) || semanas.length === 0) {
+        console.warn("Rutina sin semanas válidas al intentar avanzar progreso");
+        return null;
+      }
+
+      const curWeek = semanas[currentWeekIndex] || semanas[0];
+      const daysInWeek =
+        curWeek && Array.isArray(curWeek.dias) ? curWeek.dias.length : 0;
+
+      let nextWeekIndex = currentWeekIndex;
+      let nextDayIndex = currentDayIndex + 1;
+
+      if (nextDayIndex >= daysInWeek) {
+        // Pasar a la siguiente semana si existe, si no, mantener en la última semana
+        nextDayIndex = 0;
+        nextWeekIndex = Math.min(
+          currentWeekIndex + 1,
+          Math.max(0, semanas.length - 1)
+        );
+      }
+
+      const newProgress = {
+        weekIndex: nextWeekIndex,
+        dayIndex: nextDayIndex,
+        lastCompleted: new Date().toISOString().split("T")[0],
+      };
+
+      const userId = session?.user?.id;
+
+      // TRANSACCIÓN: Intenta persistir en Supabase PRIMERO (operación crítica)
+      if (userId) {
+        const { error: upsertError } = await supabase
+          .from("user_progress")
+          .upsert(
+            {
+              user_id: userId,
+              week_index: newProgress.weekIndex,
+              day_index: newProgress.dayIndex,
+              last_completed: newProgress.lastCompleted,
+            },
+            { onConflict: "user_id" }
+          );
+
+        // Si falla en Supabase, aborta sin actualizar AsyncStorage (transaccional)
+        if (upsertError) {
+          console.error(
+            "Error crítico al persistir progreso en Supabase:",
+            upsertError
+          );
+          return null;
+        }
+      }
+
+      // Si OK en Supabase (o si no hay userId), actualiza AsyncStorage localmente
+      await AsyncStorage.setItem(
+        "@FitAI_WorkoutProgress",
+        JSON.stringify(newProgress)
+      );
+
+      console.log("Progreso avanzado exitosamente:", newProgress);
+      return newProgress;
+    } catch (e) {
+      console.error("Error avanzando progreso:", e);
+      return null;
+    }
   };
 
   // --- Manejadores de Estado ---
@@ -205,6 +299,7 @@ export const useWorkoutLogger = () => {
 
   return {
     saveWorkoutLog,
+    advanceProgress,
     day,
     isLoading,
     diaActualData, // Datos originales (para el nombre, etc.)
