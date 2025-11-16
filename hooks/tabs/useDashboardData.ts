@@ -3,6 +3,7 @@ import { useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../constants/supabaseClient"; // Asegúrate que la ruta sea correcta
 import { useAuth } from "../auth/useAuth";
+import { normalizeAndExpandRutina } from "../../app/utils/expandRoutine";
 
 // Tipos de datos que el hook devolverá
 interface WorkoutProgress {
@@ -49,7 +50,11 @@ export const useDashboardData = (): DashboardData => {
             AsyncStorage.getItem("@FitAI_WorkoutProgress"),
           ]);
 
-          if (routineString) setRutina(JSON.parse(routineString));
+          if (routineString) {
+            const parsed = JSON.parse(routineString);
+            const normalized = normalizeAndExpandRutina(parsed);
+            setRutina(normalized);
+          }
 
           if (progressString) {
             setProgress(JSON.parse(progressString));
