@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams } from "expo-router";
+import { normalizeAndExpandRutina } from "../../app/utils/expandRoutine";
 import { SetRecord } from "../../components/Exercise/SetRow"; // Importamos el tipo
 
 // --- TIPOS DE DATOS (Basados en el JSON de la IA) ---
@@ -66,19 +67,24 @@ export const useWorkoutData = () => {
 
       try {
         if (jsonString) {
-          const rutina: RutinaGenerada = JSON.parse(jsonString);
+          const parsed = JSON.parse(jsonString);
+          // Apply normalization to expand descriptor weeks
+          const rutina: RutinaGenerada = normalizeAndExpandRutina(parsed);
           let targetDay: DiaEntrenamiento | undefined;
 
           // Lógica de compatibilidad de estructura
+          // Búsqueda a través de TODAS las semanas, no solo la semana 0
           if (
             rutina.rutina_periodizada &&
             Array.isArray(rutina.rutina_periodizada)
           ) {
-            const semana = rutina.rutina_periodizada[0];
-            if (semana && semana.dias) {
-              targetDay = semana.dias.find(
-                (d: any) => d.dia_entrenamiento === day
-              );
+            for (const semana of rutina.rutina_periodizada) {
+              if (semana && Array.isArray(semana.dias)) {
+                targetDay = semana.dias.find(
+                  (d: any) => d.dia_entrenamiento === day
+                );
+                if (targetDay) break;
+              }
             }
           }
 
