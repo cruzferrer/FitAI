@@ -163,26 +163,116 @@ serve(async (req) => {
       _       }
         `; // <-- FIN DEL PROMPT
 
-    console.log(
-      "Paso 4: Llamando a la API de OpenAI (chat.completions.create)..."
-    );
+    console.log("Paso 4: Llamando a la API de OpenAI (chat.completions.create)...");
 
+    // Use a deterministic generation and a system message that enforces strict JSON-only output
     const response = await openai.chat.completions.create({
       model: GPT_MODEL,
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: "Eres un generador de JSON. RESPONDE SOLO JSON válido sin explicaciones adicionales." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0,
       response_format: { type: "json_object" },
     });
 
-    console.log("Paso 5: Respuesta de OpenAI recibida. Devolviendo JSON.");
+    console.log("Paso 5: Respuesta de OpenAI recibida. Validando y reparando JSON si es necesario.");
     const jsonOutput = response.choices[0].message.content;
 
-    return new Response(jsonOutput, {
+    // Intentamos parsear la salida y asegurar que todas las semanas tengan `dias` como array.
+    try {
+      if (!jsonOutput || typeof jsonOutput !== "string") {
+        throw new Error("La respuesta de OpenAI no es un string JSON válido.");
+      }
+      const parsed = JSON.parse(jsonOutput);
+
+      if (parsed && Array.isArray(parsed.rutina_periodizada)) {
+        const baseWeeks = parsed.rutina_periodizada;
+        const baseWeek0Dias = Array.isArray(baseWeeks[0]?.dias) ? baseWeeks[0].dias : [];
+
+        const expandWeekFromBase = (desc: any) => {
+          try {
+            const description = (typeof desc === "string" ? desc.toLowerCase() : "");
+            const cloned = baseWeek0Dias.map((d: any) => JSON.parse(JSON.stringify(d)));
+
+            // Detect RPE change
+            let targetRPE: string | null = null;
+            if (description.includes("rpe 9") || description.includes("rpe9")) targetRPE = "RPE 9";
+            else if (description.includes("rpe 8") || description.includes("rpe8")) targetRPE = "RPE 8";
+            else if (description.includes("rpe 6") || description.includes("rpe6")) targetRPE = "RPE 6";
+
+            const shouldIncSeries = description.includes("+1") || description.includes("incremento") || description.includes("añadiendo 1") || description.includes("añadir 1") || description.includes("1 serie");
+            const shouldReduceToTwoThree = description.includes("2-3") || description.includes("2 a 3") || description.includes("reducc") || description.includes("reducción") || description.includes("reduccion");
+
+            cloned.forEach((day: any) => {
+              if (!Array.isArray(day.grupos)) return;
+              day.grupos.forEach((grupo: any) => {
+                if (!Array.isArray(grupo.ejercicios)) return;
+                grupo.ejercicios.forEach((ej: any) => {
+                  if (targetRPE) ej.carga_notacion = targetRPE;
+
+                  if (shouldIncSeries && typeof ej.series === "string") {
+                    const m = ej.series.match(/^\s*(\d+)\s*$/);
+                    if (m) {
+                      const num = parseInt(m[1], 10);
+                      ej.series = String(num + 1);
+                    } else {
+                      const range = ej.series.match(/^(\d+)\s*-\s*(\d+)$/);
+                      if (range) {
+                        const a = parseInt(range[1], 10);
+                        const b = parseInt(range[2], 10);
+                        ej.series = `${a + 1}-${b + 1}`;
+                      }
+                    }
+                  }
+
+                  if (shouldReduceToTwoThree) {
+                    ej.series = "2-3";
+                  }
+                });
+              });
+            });
+
+            return cloned;
+          } catch (e) {
+            console.warn("Error expanding week descriptor:", e);
+            return [];
+          }
+        };
+
+        parsed.rutina_periodizada = parsed.rutina_periodizada.map((w: any, idx: number) => {
+          const copy = { ...w };
+          if (copy && copy.dias) {
+            if (Array.isArray(copy.dias)) return copy;
+            if (typeof copy.dias === "string") {
+              copy.dias = expandWeekFromBase(copy.dias);
+              return copy;
+            }
+          }
+          copy.dias = [];
+          return copy;
+        });
+
+        const repaired = JSON.stringify(parsed);
+        console.log("Paso 5.B: JSON reparado y listo para devolver.");
+        return new Response(repaired, {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    } catch (e:any) {
+      console.warn("No se pudo parsear la salida de OpenAI o repararla:", e);
+      // Caerá a devolver el output original abajo
+    }
+
+    // Si no pudimos parsear o no había rutina_periodizada, devolvemos el contenido original
+    return new Response(jsonOutput ?? JSON.stringify({ error: "Respuesta vacía de OpenAI" }), {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (e) {
-    console.error("Fallo de la Edge Function:", e.message);
-    return new Response(JSON.stringify({ error: e.message }), {
+  } catch (e: any) {
+    console.error("Fallo de la Edge Function:", e?.message ?? String(e));
+    return new Response(JSON.stringify({ error: e?.message ?? String(e) }), {
       headers: { "Content-Type": "application/json" },
       status: 500,
     });
