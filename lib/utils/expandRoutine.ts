@@ -69,7 +69,3 @@ export function normalizeAndExpandRutina(parsed: any) {
 
   return parsed;
 }
-
-// Stub default export so Expo Router doesn't treat this file as a broken route
-// Default stub exported to satisfy Expo Router's route check (no-op)
-export default null as unknown as (() => null) | null;
