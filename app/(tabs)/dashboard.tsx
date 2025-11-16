@@ -99,12 +99,12 @@ const DashboardScreen: React.FC = () => {
             <Text style={styles.greeting}>Good Morning,</Text>
             <Text style={styles.userName}>{userName}!</Text>
           </View>
-            <GradientCircleProgress
-              size={60}
-              progress={dailyTotalProgress}
-              textContent={`${Math.round(dailyTotalProgress * 100)}%`}
-              textStyle={styles.progressText}
-            />
+          <GradientCircleProgress
+            size={60}
+            progress={dailyTotalProgress}
+            textContent={`${Math.round(dailyTotalProgress * 100)}%`}
+            textStyle={styles.progressText}
+          />
         </View>
 
         {/* TODAY'S PLAN */}

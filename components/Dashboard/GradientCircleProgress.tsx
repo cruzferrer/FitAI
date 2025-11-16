@@ -16,37 +16,41 @@ const GradientCircleProgress: React.FC<GradientCircleProgressProps> = ({
   textContent,
   textStyle,
 }) => {
-  const radius = (size - 12) / 2; // Dejar espacio para el stroke
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2; // Leave space for stroke
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - progress * circumference;
+  const coverLength = circumference - progress * circumference;
+  // shift overlay by half stroke width so the visible arc keeps its rounded cap
+  const overlayOffsetShift = strokeWidth / 2;
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size}>
         <Defs>
-          <LinearGradient id="circleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#FF4500" stopOpacity="1" />
-            {/* Rojo-Naranja */}
-            <Stop offset="33%" stopColor="#FFA500" stopOpacity="1" />
+          {/* Map the gradient from top to bottom in user space so the 0% stop
+              corresponds to the top of the circle. This, combined with the
+              circle's -90deg rotation, makes the gradient start at the top and
+              progress clockwise. */}
+          <LinearGradient
+            id="circleGrad"
+            gradientUnits="userSpaceOnUse"
+            x1={size / 2}
+            y1={0}
+            x2={size / 2}
+            y2={size}
+          >
+            <Stop offset="100%" stopColor="#FF4500" stopOpacity="1" />
+            {/* Rojo */}
+            <Stop offset="66%" stopColor="#FFA500" stopOpacity="1" />
             {/* Naranja */}
-            <Stop offset="66%" stopColor="#FFD700" stopOpacity="1" />
+            <Stop offset="33%" stopColor="#FFD700" stopOpacity="1" />
             {/* Amarillo */}
-            <Stop offset="100%" stopColor="#32CD32" stopOpacity="1" />
+            <Stop offset="0%" stopColor="#32CD32" stopOpacity="1" />
             {/* Verde */}
           </LinearGradient>
         </Defs>
 
-        {/* Círculo de fondo (gris vacío) */}
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={COLORS.inputBackground}
-          strokeWidth={6}
-          fill="transparent"
-        />
-
-        {/* Círculo de progreso (con gradiente) */}
+        {/* Gradient visible across the whole circle (we'll mask the unfilled arc) */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -54,13 +58,32 @@ const GradientCircleProgress: React.FC<GradientCircleProgressProps> = ({
           stroke="url(#circleGrad)"
           strokeWidth={6}
           fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
           rotation="-90"
           originX={size / 2}
           originY={size / 2}
         />
+
+        {/* Overlay the unfilled portion with the background stroke so the gradient
+            is only revealed up to the current progress. Shift the overlay by
+            half the stroke width to avoid covering the rounded cap of the
+            visible arc; use a flat cap on the overlay to keep the cover neat. */}
+        {progress < 1 && (
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={COLORS.inputBackground}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeDasharray={`${coverLength} ${circumference}`}
+            strokeDashoffset={-progress * circumference + overlayOffsetShift}
+            strokeLinecap="butt"
+            rotation="-90"
+            originX={size / 2}
+            originY={size / 2}
+          />
+        )}
       </Svg>
 
       {/* Texto centrado */}
