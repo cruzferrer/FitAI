@@ -1,5 +1,5 @@
 async function run() {
-  const mod = await import("../app/utils/expandRoutine.ts");
+  const mod = await import("../lib/utils/expandRoutine");
   const normalizeAndExpandRutina = mod.normalizeAndExpandRutina;
 
   // Sample minimal payload (use the real structure if available)
