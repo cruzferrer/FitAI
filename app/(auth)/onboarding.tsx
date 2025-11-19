@@ -6,10 +6,12 @@ import PrimaryButton from "../../components/Buttons/PrimaryButton";
 import OptionSelector from "../../components/Form/OptionSelector";
 // Importamos el nuevo hook
 import { useOnboarding, OPTIONS } from "../../hooks/auth/useOnboarding";
+import { useRouter } from "expo-router";
 
 const OnboardingScreen: React.FC = () => {
   // Consumimos el hook
   const { state, setters, handleGenerateRoutine } = useOnboarding();
+  const router = useRouter();
   const {
     objective,
     experience,
@@ -68,6 +70,12 @@ const OnboardingScreen: React.FC = () => {
           selectedValue={notation}
           onSelect={(val) => setNotation(val as string)}
           disabled={isLoading}
+        />
+
+        <PrimaryButton
+          title="Más preferencias"
+          onPress={() => router.push("/ (auth)/onboarding_extra")}
+          style={{ marginTop: 16, backgroundColor: COLORS.secondary }}
         />
 
         <PrimaryButton

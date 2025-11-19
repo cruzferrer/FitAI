@@ -8,9 +8,12 @@ import { supabase } from "../../constants/supabaseClient"; // Asegúrate que la 
 export const OPTIONS = {
   objective: ["Fuerza", "Hipertrofia", "Mixto"],
   experience: ["Principiante", "Intermedio", "Avanzado"],
-  days: [3, 4, 5, 6],
+  days: [2, 3, 4, 5, 6],
   equipment: ["Gimnasio completo", "Mancuernas y casa", "Solo peso corporal"],
   notation: ["RPE / RIR (Moderno)", "Tradicional (Al Fallo)"],
+  generationPreference: ["Generado por IA", "Plantilla estándar", "Mixto"],
+  timePerSession: [30, 45, 60],
+  comfort: ["Priorizar comodidad (ejercicios sencillos)", "Priorizar máxima transferencia"]
 };
 
 // Hook
@@ -24,6 +27,17 @@ export const useOnboarding = () => {
   const [notation, setNotation] = useState<string | null>(
     "Tradicional (Al Fallo)"
   );
+  const [generationPreference, setGenerationPreference] = useState<string | null>(
+    "Generado por IA"
+  );
+  const [preferredExercises, setPreferredExercises] = useState<string | null>(
+    null
+  );
+  const [injuries, setInjuries] = useState<string | null>(null);
+  const [timePerSession, setTimePerSession] = useState<number | null>(60);
+  const [comfortPreference, setComfortPreference] = useState<string | null>(
+    "Priorizar comodidad (ejercicios sencillos)"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   // Derivamos si el formulario está completo
@@ -32,7 +46,8 @@ export const useOnboarding = () => {
     experience &&
     days &&
     equipment &&
-    notation
+    notation &&
+    generationPreference
   );
 
   // URL de tu Edge Function (Tu ID es necesario aquí)
@@ -60,6 +75,11 @@ export const useOnboarding = () => {
           available_days: days,
           user_equipment: equipment,
           user_notation: notation,
+          generation_preference: generationPreference,
+          preferred_exercises: preferredExercises,
+          injuries: injuries,
+          time_per_session: timePerSession,
+          comfort_preference: comfortPreference,
         }),
       });
 
@@ -98,6 +118,11 @@ export const useOnboarding = () => {
       days,
       equipment,
       notation,
+      generationPreference,
+      preferredExercises,
+      injuries,
+      timePerSession,
+      comfortPreference,
       isLoading,
       isFormComplete,
     },
@@ -107,6 +132,11 @@ export const useOnboarding = () => {
       setDays,
       setEquipment,
       setNotation,
+      setGenerationPreference,
+      setPreferredExercises,
+      setInjuries,
+      setTimePerSession,
+      setComfortPreference,
     },
     handleGenerateRoutine,
     OPTIONS, // Exportamos las opciones para que la UI las use

@@ -67,13 +67,18 @@ async function searchKnowledge(
 serve(async (req) => {
   try {
     console.log("Paso 1: Edge Function invocada.");
-    // --- ACEPTAR LA NUEVA VARIABLE 'user_notation' ---
+    // --- ACEPTAR LAS VARIABLES ENVIADAS POR EL FRONT ---
     const {
       user_objective,
       user_experience,
       available_days,
       user_equipment,
       user_notation,
+      generation_preference,
+      preferred_exercises,
+      injuries,
+      time_per_session,
+      comfort_preference,
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -86,6 +91,19 @@ serve(async (req) => {
       supabaseClient,
       knowledgeQuery
     );
+
+    // Adicional: buscar contenido específico sobre "mejores ejercicios" (Tier List)
+    let exercisesKnowledge = "";
+    try {
+      exercisesKnowledge = await searchKnowledge(
+        supabaseClient,
+        "mejores ejercicios tier list prioridad ejercicios Tier S A alternativas cómodas",
+        5
+      );
+    } catch (err) {
+      console.warn("No se pudo obtener conocimiento específico de 'mejores ejercicios':", err?.message ?? err);
+      exercisesKnowledge = "";
+    }
 
     console.log("Paso 3.A: Obteniendo catálogo de ejercicios...");
     const { data: exerciseData, error: dbError } = await supabaseClient
@@ -110,6 +128,11 @@ serve(async (req) => {
             - Días de Entrenamiento: ${available_days}
             - Equipamiento: ${user_equipment}
             - Preferencia de Notación: ${user_notation}
+            - Preferencia de Generación: ${generation_preference ?? "Generado por IA"}
+            - Ejercicios preferidos (si indican): ${preferred_exercises ?? "Ninguno especificado"}
+            - Lesiones / Limitaciones: ${injuries ?? "Ninguna"}
+            - Tiempo objetivo por sesión: ${time_per_session ?? "No especificado"} min
+            - Preferencia de comodidad: ${comfort_preference ?? "Priorizar comodidad"}
 
             **REGLAS DE GENERACIÓN (OBLIGATORIAS - DEBES CUMPLIRLAS):**
             1.  **REGLA DE DÍAS (CRÍTICA):** DEBES generar un plan para *exactamente* el número de \`${available_days}\` días. Si \`${available_days}\` es 6, un split PPL (Push/Pull/Legs) x2 es apropiado. Si son 4, un Upper/Lower x2 es apropiado. Si son 5, un split PPL + Upper/Lower es apropiado.
@@ -121,8 +144,15 @@ serve(async (req) => {
             
             5.  **REGLA DE VARIEDAD DE EJERCICIOS (¡NUEVA!):** Para cada grupo muscular principal (ej. "Pecho", "Espalda", "Piernas") en un día, DEBES incluir al menos dos (2) ejercicios diferentes del catálogo. Por ejemplo, para "Pecho", puedes incluir "Press Banca" (compuesto) y "Aperturas en Peck Deck" (aislamiento). No incluyas solo un ejercicio por grupo muscular.
 
+            6.  **PRIORIDAD DE EJERCICIOS (OBLIGATORIA):** Prioriza ejercicios listados en la Tier List científica (Tier S/A) del conocimiento interno (mejores_ejercicios). Si el usuario pide "comodidad" o tiene limitaciones, selecciona las alternativas "cómodas" indicadas. Cuando incluyas pecho, por defecto usa `Bench Press` / `Chest Press` (barra o mancuerna segun equipo) como ejercicio principal, salvo que el usuario indique lo contrario.
+
+            7.  **CATÁLOGO Y CONCORDANCIA:** Selecciona ejercicios SOLO del catálogo JSON provisto (campo `CATÁLOGO DE EJERCICIOS PERMITIDOS`). Si un ejercicio recomendado no existe en el catálogo, elige la alternativa más similar disponible.
+
             **PRINCIPIOS CIENTÍFICOS (DEBES SEGUIR ESTO ESTRICTAMENTE):**
             ${scientificKnowledge}
+
+            **CONOCIMIENTO SOBRE MEJORES EJERCICIOS (TIER LIST):**
+            ${exercisesKnowledge}
 
             **CATÁLOGO DE EJERCICIOS PERMITIDOS:**
             - Utiliza ejercicios SOLAMENTE de esta lista JSON: ${exerciseList}
