@@ -22,10 +22,11 @@ export const useLogin = () => {
     if (error) {
       Alert.alert("Error de Login", error.message);
     } else {
-      // Éxito: El hook 'useAuth' manejará la sesión,
-      // el Root Redirector ('app/index.tsx') te enviará a '/(tabs)'
-      // o a '/(auth)/onboarding' si es la primera vez (lógica que ya implementamos).
-      router.replace("/(auth)/onboarding"); // Forzamos ir al onboarding por ahora
+      // Éxito: El hook 'useAuth' manejará la sesión.
+      // Tras un login normal no debemos forzar el onboarding. En su lugar
+      // redirigimos al dashboard. El onboarding debe lanzarse solo tras
+      // un registro nuevo o cuando falten datos del perfil.
+      router.replace("/(tabs)/dashboard");
     }
   };
 

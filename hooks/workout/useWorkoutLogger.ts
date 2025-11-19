@@ -196,7 +196,7 @@ export const useWorkoutLogger = () => {
       let rutina = JSON.parse(routineStr);
       // IMPORTANTE: Normalizar la rutina para expandir semanas descriptor (string) a arrays concretos
       rutina = normalizeAndExpandRutina(rutina);
-      
+
       const progress = progStr
         ? JSON.parse(progStr)
         : { weekIndex: 0, dayIndex: 0, lastCompleted: null };
@@ -226,10 +226,16 @@ export const useWorkoutLogger = () => {
         );
       }
 
+      const formatLocalDate = (d = new Date()) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
       const newProgress = {
         weekIndex: nextWeekIndex,
         dayIndex: nextDayIndex,
-        lastCompleted: new Date().toISOString().split("T")[0],
+        lastCompleted: formatLocalDate(),
       };
 
       const userId = session?.user?.id;

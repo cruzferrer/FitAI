@@ -112,6 +112,7 @@ const WorkoutLogScreen: React.FC = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{day}</Text>
         <View style={styles.timerGroup}>
+          {/* (Regenerar moved to Dashboard) */}
           <Text style={styles.timerText}>{formatTime(seconds)}</Text>
           <TouchableOpacity onPress={handleFinish} style={styles.finishButton}>
             <Text style={styles.finishButtonText}>Finish</Text>
