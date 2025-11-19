@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import COLORS from '@/constants/theme'; 
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { COLORS } from "@/constants/theme";
 
 interface RoutineStartCardProps {
   dia: string;
@@ -9,14 +9,22 @@ interface RoutineStartCardProps {
   onPress: () => void;
 }
 
-const RoutineStartCard: React.FC<RoutineStartCardProps> = ({ dia, fase, onPress }) => {
+const RoutineStartCard: React.FC<RoutineStartCardProps> = ({
+  dia,
+  fase,
+  onPress,
+}) => {
   return (
     <View style={styles.cardContainer}>
       <Text style={styles.headerTitle}>— Tu Rutina de Hoy —</Text>
-      
+
       {/* Información de la Rutina */}
       <View style={styles.infoRow}>
-        <MaterialCommunityIcons name="calendar-check" size={30} color={COLORS.accent} />
+        <MaterialCommunityIcons
+          name="calendar-check"
+          size={30}
+          color={COLORS.accent}
+        />
         <View style={styles.textGroup}>
           <Text style={styles.dayText}>{dia}</Text>
           <Text style={styles.phaseText}>Fase: {fase}</Text>
@@ -24,13 +32,17 @@ const RoutineStartCard: React.FC<RoutineStartCardProps> = ({ dia, fase, onPress 
       </View>
 
       {/* Botón de Inicio */}
-      <TouchableOpacity 
-        style={styles.startButton} 
+      <TouchableOpacity
+        style={styles.startButton}
         onPress={onPress}
         activeOpacity={0.8}
       >
         <Text style={styles.startButtonText}>Empezar Entrenamiento</Text>
-        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.primaryText} />
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={24}
+          color={COLORS.primaryText}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -38,7 +50,7 @@ const RoutineStartCard: React.FC<RoutineStartCardProps> = ({ dia, fase, onPress 
 
 const styles = StyleSheet.create({
   cardContainer: {
-    width: '100%',
+    width: "100%",
     backgroundColor: COLORS.inputBackground,
     borderRadius: 15,
     padding: 20,
@@ -50,13 +62,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 14,
     color: COLORS.secondaryText,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   textGroup: {
@@ -65,7 +77,7 @@ const styles = StyleSheet.create({
   },
   dayText: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primaryText,
   },
   phaseText: {
@@ -74,16 +86,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   startButton: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.accent,
     borderRadius: 10,
     paddingVertical: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   startButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primaryText,
     marginRight: 5,
   },

@@ -23,15 +23,27 @@ const GradientProgressBar: React.FC<GradientProgressBarProps> = ({
     <View style={[styles.container, { height }]} onLayout={onLayout}>
       <Svg width={width} height={height}>
         <Defs>
-          <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#FF4500" stopOpacity="1" />
+          {/* Use userSpaceOnUse so the gradient maps to absolute coordinates of the
+              SVG (the full container width). This allows us to draw a smaller
+              rect (the filled portion) and still sample the gradient fixed to
+              the full container, preventing the gradient from rescaling. */}
+          <LinearGradient
+            id="grad"
+            gradientUnits="userSpaceOnUse"
+            x1="0"
+            y1="0"
+            x2={String(width)}
+            y2="0"
+          >
+            <Stop offset="0%" stopColor="#FF4500" stopOpacity="1" />
             {/* Naranja */}
-            <Stop offset="0.5" stopColor="#FFD700" stopOpacity="1" />
+            <Stop offset="50%" stopColor="#FFA500" stopOpacity="1" />
             {/* Amarillo */}
-            <Stop offset="1" stopColor="#32CD32" stopOpacity="1" />
+            <Stop offset="100%" stopColor="#32CD32" stopOpacity="1" />
             {/* Verde */}
           </LinearGradient>
         </Defs>
+
         {/* Fondo (barra vacía) */}
         <Rect
           x="0"
@@ -41,15 +53,20 @@ const GradientProgressBar: React.FC<GradientProgressBarProps> = ({
           rx={height / 2}
           fill={COLORS.inputBackground}
         />
-        {/* Barra de progreso (con gradiente) */}
-        <Rect
-          x="0"
-          y="0"
-          width={progressWidth}
-          height={height}
-          rx={height / 2}
-          fill="url(#grad)"
-        />
+
+        {/* Barra de progreso: draw only up to progressWidth, with rounded caps.
+            Because the gradient uses userSpaceOnUse mapped to the full width,
+            the visible segment will show the correct slice of the gradient. */}
+        {progressWidth > 0 && (
+          <Rect
+            x={0}
+            y={0}
+            width={progressWidth}
+            height={height}
+            rx={height / 2}
+            fill="url(#grad)"
+          />
+        )}
       </Svg>
     </View>
   );

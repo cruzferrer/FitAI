@@ -56,14 +56,101 @@ export const useDashboardData = (): DashboardData => {
             setRutina(normalized);
           }
 
-          if (progressString) {
-            setProgress(JSON.parse(progressString));
-          } else {
-            setProgress({ weekIndex: 0, dayIndex: 0, lastCompleted: null });
+          const localProg = progressString
+            ? JSON.parse(progressString)
+            : { weekIndex: 0, dayIndex: 0, lastCompleted: null };
+
+          // Si hay sesión en Supabase, obtén progreso central y luego haremos merge
+          let remoteProg: any = null;
+          if (userId) {
+            const { data: upData, error: upErr } = await supabase
+              .from("user_progress")
+              .select("week_index, day_index, last_completed")
+              .eq("user_id", userId)
+              .maybeSingle();
+
+            if (upErr) throw upErr;
+            if (upData) {
+              remoteProg = {
+                weekIndex: Number(upData.week_index) || 0,
+                dayIndex: Number(upData.day_index) || 0,
+                lastCompleted: upData.last_completed || null,
+              };
+            }
+          }
+
+          // Merge logic: prefer the most reciente por lastCompleted si existe,
+          // si ambos null, preferir el que tenga mayor week/day. Finalmente,
+          // si son iguales preferir remoteProg.
+          const chooseProgress = (localP: any, remoteP: any) => {
+            if (!remoteP) return localP;
+            if (!localP) return remoteP;
+            const localDate = localP.lastCompleted
+              ? new Date(localP.lastCompleted)
+              : null;
+            const remoteDate = remoteP.lastCompleted
+              ? new Date(remoteP.lastCompleted)
+              : null;
+            if (localDate && remoteDate) {
+              if (remoteDate > localDate) return remoteP;
+              if (localDate > remoteDate) return localP;
+            }
+            if (remoteP.weekIndex > localP.weekIndex) return remoteP;
+            if (localP.weekIndex > remoteP.weekIndex) return localP;
+            if (remoteP.dayIndex > localP.dayIndex) return remoteP;
+            if (localP.dayIndex > remoteP.dayIndex) return localP;
+            return remoteP;
+          };
+
+          const merged = chooseProgress(localProg, remoteProg);
+          setProgress(merged);
+
+          // Sincronizar en ambos sentidos según corresponda
+          try {
+            if (userId) {
+              // Si elegimos local y hay remote distinto, subimos local a supabase
+              const localEqualsRemote =
+                JSON.stringify(localProg) === JSON.stringify(remoteProg);
+              if (
+                !localEqualsRemote &&
+                JSON.stringify(merged) === JSON.stringify(localProg)
+              ) {
+                await supabase.from("user_progress").upsert(
+                  {
+                    user_id: userId,
+                    week_index: merged.weekIndex,
+                    day_index: merged.dayIndex,
+                    last_completed: merged.lastCompleted,
+                  },
+                  { onConflict: "user_id" }
+                );
+              }
+
+              // Si elegimos remote y local distinto, escribir en AsyncStorage
+              if (
+                !localEqualsRemote &&
+                JSON.stringify(merged) === JSON.stringify(remoteProg)
+              ) {
+                await AsyncStorage.setItem(
+                  "@FitAI_WorkoutProgress",
+                  JSON.stringify(merged)
+                );
+              }
+            }
+          } catch (syncErr) {
+            // No fatal: loggear pero continuar
+            console.warn("Error sincronizando progreso:", syncErr);
           }
 
           if (userId) {
-            const today = new Date().toISOString().split("T")[0];
+            // Use local date (YYYY-MM-DD) to match user local day instead of UTC
+            const formatLocalDate = (d = new Date()) => {
+              const y = d.getFullYear();
+              const m = String(d.getMonth() + 1).padStart(2, "0");
+              const day = String(d.getDate()).padStart(2, "0");
+              return `${y}-${m}-${day}`;
+            };
+            const today = formatLocalDate();
 
             // Cargar datos de nutrición en paralelo
             const [paramRes, regRes] = await Promise.all([

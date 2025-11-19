@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "../auth/useAuth";
 import { supabase } from "../../constants/supabaseClient";
+import { normalizeAndExpandRutina } from "../../app/utils/expandRoutine";
 
 // --- TIPOS DE DATOS ---
 // (Estos tipos deben coincidir con tu JSON de la IA y el estado interactivo)
@@ -179,6 +180,7 @@ export const useWorkoutLogger = () => {
   // Avanza el progreso local guardado en AsyncStorage ("@FitAI_WorkoutProgress").
   // Lógica:
   // - Lee el progreso actual y la rutina guardada (@FitAI_UserRoutine)
+  // - Normaliza la rutina para asegurar todas las semanas tienen dias como arrays
   // - Incrementa dayIndex; si supera el número de días de la semana actual, pasa a la siguiente semana
   // - Actualiza lastCompleted con la fecha actual
   const advanceProgress = async () => {
@@ -191,7 +193,10 @@ export const useWorkoutLogger = () => {
         return null;
       }
 
-      const rutina = JSON.parse(routineStr);
+      let rutina = JSON.parse(routineStr);
+      // IMPORTANTE: Normalizar la rutina para expandir semanas descriptor (string) a arrays concretos
+      rutina = normalizeAndExpandRutina(rutina);
+
       const progress = progStr
         ? JSON.parse(progStr)
         : { weekIndex: 0, dayIndex: 0, lastCompleted: null };
@@ -221,10 +226,16 @@ export const useWorkoutLogger = () => {
         );
       }
 
+      const formatLocalDate = (d = new Date()) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
       const newProgress = {
         weekIndex: nextWeekIndex,
         dayIndex: nextDayIndex,
-        lastCompleted: new Date().toISOString().split("T")[0],
+        lastCompleted: formatLocalDate(),
       };
 
       const userId = session?.user?.id;

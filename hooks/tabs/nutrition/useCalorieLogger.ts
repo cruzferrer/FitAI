@@ -42,7 +42,14 @@ export const useCalorieLogger = () => {
 
       if (paramData) setParametros(paramData as Parametros);
 
-      const today = new Date().toISOString().split("T")[0];
+      // Use local date (YYYY-MM-DD) to avoid UTC-related off-by-one days
+      const formatLocalDate = (d = new Date()) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+      const today = formatLocalDate();
       const { data: regData } = await supabase
         .from("registro_calorias")
         .select("*")
@@ -78,20 +85,45 @@ export const useCalorieLogger = () => {
       const userId = userData.user?.id;
       if (!userId) throw new Error("Usuario no autenticado.");
 
-      const currentConsumed = registroHoy?.kcal_consumidas || 0;
+      const formatLocalDate = (d = new Date()) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+      const today = formatLocalDate();
+
+      // Busca registro existente del día
+      const { data: existing, error: selErr } = await supabase
+        .from("registro_calorias")
+        .select("id, kcal_consumidas")
+        .eq("user_id", userId)
+        .eq("fecha", today)
+        .maybeSingle();
+
+      if (selErr) throw selErr;
+
+      const currentConsumed = existing
+        ? Number(existing.kcal_consumidas || 0)
+        : 0;
       const newTotal = currentConsumed + kcalToAdd;
-      const today = new Date().toISOString().split("T")[0];
 
-      const { error } = await supabase.from("registro_calorias").upsert(
-        {
-          user_id: userId,
-          fecha: today,
-          kcal_consumidas: newTotal,
-        } as any,
-        { onConflict: "user_id, fecha" }
-      );
-
-      if (error) throw error;
+      if (existing && existing.id) {
+        const { error: updErr } = await supabase
+          .from("registro_calorias")
+          .update({ kcal_consumidas: newTotal })
+          .eq("id", existing.id as any);
+        if (updErr) throw updErr;
+      } else {
+        const { error: insErr } = await supabase
+          .from("registro_calorias")
+          .insert({
+            user_id: userId,
+            fecha: today,
+            kcal_consumidas: newTotal,
+          } as any);
+        if (insErr) throw insErr;
+      }
 
       setNuevoConsumo("");
       await loadData(); // Recarga los datos

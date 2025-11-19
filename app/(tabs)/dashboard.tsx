@@ -11,10 +11,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { COLORS } from "../../constants/theme";
 import { useAuth } from "../../hooks/auth/useAuth";
-import * as Progress from "react-native-progress";
 
 import PlanCard from "../../components/Dashboard/PlanCard";
 import CalorieWidget from "../../components/Dashboard/CalorieWidget";
+import GradientCircleProgress from "../../components/Dashboard/GradientCircleProgress";
+import PrimaryButton from "../../components/Buttons/PrimaryButton";
 import { useDashboardData } from "../../hooks/tabs/useDashboardData"; // <-- NUEVO HOOK
 
 const DashboardScreen: React.FC = () => {
@@ -30,10 +31,16 @@ const DashboardScreen: React.FC = () => {
   const targetKcal = parametros?.kcal_mantenimiento || 0;
   const consumedKcal = registroHoy?.kcal_consumidas || 0;
 
+  // Compare using local YYYY-MM-DD date to avoid UTC shift issues
+  const formatLocalDate = (d = new Date()) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+  const todayLocal = formatLocalDate();
   const workoutDone =
-    progress?.lastCompleted &&
-    new Date(progress.lastCompleted).toISOString().split("T")[0] ===
-      new Date().toISOString().split("T")[0]
+    progress?.lastCompleted && (progress.lastCompleted as string) === todayLocal
       ? 1
       : 0;
 
@@ -99,16 +106,11 @@ const DashboardScreen: React.FC = () => {
             <Text style={styles.greeting}>Good Morning,</Text>
             <Text style={styles.userName}>{userName}!</Text>
           </View>
-          <Progress.Circle
+          <GradientCircleProgress
             size={60}
             progress={dailyTotalProgress}
-            showsText
-            formatText={() => `${Math.round(dailyTotalProgress * 100)}%`}
+            textContent={`${Math.round(dailyTotalProgress * 100)}%`}
             textStyle={styles.progressText}
-            color={COLORS.accent}
-            unfilledColor={COLORS.inputBackground}
-            borderWidth={0}
-            thickness={6}
           />
         </View>
 
@@ -140,6 +142,25 @@ const DashboardScreen: React.FC = () => {
           title="Nutrition"
           subtitle={`Goal: ${parametros?.objetivo_calorico || "Calcular Meta"}`}
           onPress={() => router.push("/(tabs)/nutrition")}
+        />
+
+        {/* Regenerar rutina: botón visible en el Dashboard (fuera del detalle) */}
+        <PrimaryButton
+          title="Regenerar Rutina"
+          onPress={() =>
+            Alert.alert(
+              "Regenerar Rutina",
+              "Esto reemplazará tu split actual. ¿Deseas continuar?",
+              [
+                { text: "Cancelar", style: "cancel" },
+                {
+                  text: "Sí, regenerar",
+                  onPress: () => router.push("/(auth)/onboarding"),
+                },
+              ]
+            )
+          }
+          style={{ marginTop: 12 }}
         />
 
         {/* DAILY TARGETS */}
