@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-console.log("Función 'generar-rutina' iniciada (v3 - Reglas Estrictas).");
+console.log("Función 'generar-rutina' iniciada (v4 - Reglas Ultra Estrictas).");
 
 // ----------------------------------------------------
 // 1. CONFIGURACIÓN E INICIALIZACIÓN
@@ -22,7 +22,7 @@ if (!OPENAI_API_KEY) {
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 const EMBEDDING_MODEL = "text-embedding-ada-002";
-const GPT_MODEL = "gpt-4-turbo-preview"; // o 'gpt-3.5-turbo' si el 4 falla
+const GPT_MODEL = "gpt-4-turbo-preview";
 
 // ----------------------------------------------------
 // 2. FUNCIÓN DE BÚSQUEDA (RAG)
@@ -33,14 +33,14 @@ async function searchKnowledge(
   query: string,
   match_count: number = 5
 ) {
-  console.log("Paso 2.A: Generando embedding para RAG...");
+  console.log("Generando embedding para RAG...");
   const embeddingResponse = await openai.embeddings.create({
     model: EMBEDDING_MODEL,
     input: query,
   });
   const userEmbedding = embeddingResponse.data[0].embedding;
 
-  console.log("Paso 2.B: Buscando en pgvector (match_documents)...");
+  console.log("Buscando en pgvector (match_documents)...");
   const { data, error } = await supabaseClient.rpc("match_documents", {
     match_count: match_count,
     query_embedding: userEmbedding,
@@ -55,7 +55,7 @@ async function searchKnowledge(
   }
 
   console.log(
-    `Paso 2.C: Conocimiento RAG encontrado (${data.length} fragmentos).`
+    `Conocimiento RAG encontrado (${data.length} fragmentos).`
   );
   return data.map((d: any) => d.contenido).join("\n---\n");
 }
@@ -66,8 +66,7 @@ async function searchKnowledge(
 
 serve(async (req) => {
   try {
-    console.log("Paso 1: Edge Function invocada.");
-    // --- ACEPTAR LAS VARIABLES ENVIADAS POR EL FRONT ---
+    console.log("Edge Function invocada.");
     const {
       user_objective,
       user_experience,
@@ -92,7 +91,6 @@ serve(async (req) => {
       knowledgeQuery
     );
 
-    // Adicional: buscar contenido específico sobre "mejores ejercicios" (Tier List)
     let exercisesKnowledge = "";
     try {
       exercisesKnowledge = await searchKnowledge(
@@ -101,103 +99,154 @@ serve(async (req) => {
         5
       );
     } catch (err) {
-      console.warn("No se pudo obtener conocimiento específico de 'mejores ejercicios':", err?.message ?? err);
+      console.warn(
+        "No se pudo obtener conocimiento específico de 'mejores ejercicios':",
+        err?.message ?? err
+      );
       exercisesKnowledge = "";
     }
 
-    console.log("Paso 3.A: Obteniendo catálogo de ejercicios...");
+    console.log("Obteniendo catálogo de ejercicios...");
     const { data: exerciseData, error: dbError } = await supabaseClient
       .from("ejercicios")
       .select("name, targetMuscles, bodyParts, equipments")
-      .limit(50);
+      .limit(100);
 
     if (dbError)
       throw new Error("Error al obtener ejercicios: " + dbError.message);
 
     const exerciseList = JSON.stringify(exerciseData);
-    console.log("Paso 3.B: Creando Super-Prompt...");
+    console.log("Creando prompt optimizado...");
 
-    // --- PROMPT MEJORADO CON LAS NUEVAS REGLAS (P1, P2, P3, P4) ---
-    const prompt = `
-            ROL: Eres "FitAI Coach", un experto en periodización.
-            TAREA: Genera un mesociclo de 6 semanas periodizado con progresión semanal.
+    // Construir variables sin interpolaciones dentro del template literal
+    const generationMode = generation_preference ?? "Generado por IA";
+    const userPreferredExercises = preferred_exercises ?? "Ninguno especificado";
+    const userInjuries = injuries ?? "Ninguna";
+    const userTimePerSession = time_per_session ?? "No especificado";
+    const userComfortPreference = comfort_preference ?? "Priorizar comodidad";
 
-            **PERFIL DEL USUARIO:**
-            - Objetivo Principal: ${user_objective}
-            - Nivel de Experiencia: ${user_experience}
-            - Días de Entrenamiento: ${available_days}
-            - Equipamiento: ${user_equipment}
-            - Preferencia de Notación: ${user_notation}
-            - Preferencia de Generación: ${generation_preference ?? "Generado por IA"}
-            - Ejercicios preferidos (si indican): ${preferred_exercises ?? "Ninguno especificado"}
-            - Lesiones / Limitaciones: ${injuries ?? "Ninguna"}
-            - Tiempo objetivo por sesión: ${time_per_session ?? "No especificado"} min
-            - Preferencia de comodidad: ${comfort_preference ?? "Priorizar comodidad"}
+    const prompt = `Eres "FitAI Coach", un experto en periodización deportiva y ciencias del ejercicio.
 
-            **REGLAS DE GENERACIÓN (OBLIGATORIAS - DEBES CUMPLIRLAS):**
-            1.  **REGLA DE DÍAS (CRÍTICA):** DEBES generar un plan para *exactamente* el número de \`${available_days}\` días. Si \`${available_days}\` es 6, un split PPL (Push/Pull/Legs) x2 es apropiado. Si son 4, un Upper/Lower x2 es apropiado. Si son 5, un split PPL + Upper/Lower es apropiado.
-            2.  **REGLA DE VOLUMEN (SERIES):** Tus "series" en el JSON deben ser realistas para un solo ejercicio (ej. 3-5 series). NO generes solo 1 serie por ejercicio. El volumen total (ej. 10-20 series) se refiere a *SERIES POR SEMANA* por grupo muscular.
-            3.  **REGLA DE REPETICIONES:** Basa las repeticiones en el objetivo. Hipertrofia (6-15 reps), Fuerza (1-5 reps). NO uses 20-25 reps para hipertrofia a menos que sea un aislamiento específico.
-            4.  **REGLA DE NOTACIÓN:** Basa la "carga_notacion" en la preferencia del usuario.
-                - Si la preferencia es 'RPE / RIR (Moderno)', usa notación RPE o RIR (ej. "RPE 8" o "RIR 2").
-                - Si la preferencia es 'Tradicional (Al Fallo)', describe la intensidad (ej. "Peso pesado", "Peso moderado", o "Al fallo").
-            
-            5.  **REGLA DE VARIEDAD DE EJERCICIOS (¡NUEVA!):** Para cada grupo muscular principal (ej. "Pecho", "Espalda", "Piernas") en un día, DEBES incluir al menos dos (2) ejercicios diferentes del catálogo. Por ejemplo, para "Pecho", puedes incluir "Press Banca" (compuesto) y "Aperturas en Peck Deck" (aislamiento). No incluyas solo un ejercicio por grupo muscular.
+Tu tarea es generar un mesociclo de 6 semanas con progresión semanal para el siguiente perfil:
 
-            6.  **PRIORIDAD DE EJERCICIOS (OBLIGATORIA):** Prioriza ejercicios listados en la Tier List científica (Tier S/A) del conocimiento interno (mejores_ejercicios). Si el usuario pide "comodidad" o tiene limitaciones, selecciona las alternativas "cómodas" indicadas. Cuando incluyas pecho, por defecto usa `Bench Press` / `Chest Press` (barra o mancuerna segun equipo) como ejercicio principal, salvo que el usuario indique lo contrario.
+═══════════════════════════════════════════════════════════════════
+PERFIL DEL USUARIO
+═══════════════════════════════════════════════════════════════════
+• Objetivo: ${user_objective}
+• Experiencia: ${user_experience}
+• Días disponibles: ${available_days} días por semana
+• Equipamiento: ${user_equipment}
+• Notación preferida: ${user_notation}
+• Preferencia de generación: ${generationMode}
+• Ejercicios preferidos: ${userPreferredExercises}
+• Lesiones/limitaciones: ${userInjuries}
+• Tiempo por sesión: ${userTimePerSession} minutos
+• Preferencia de comodidad: ${userComfortPreference}
 
-            7.  **CATÁLOGO Y CONCORDANCIA:** Selecciona ejercicios SOLO del catálogo JSON provisto (campo `CATÁLOGO DE EJERCICIOS PERMITIDOS`). Si un ejercicio recomendado no existe en el catálogo, elige la alternativa más similar disponible.
+═══════════════════════════════════════════════════════════════════
+REGLAS CRÍTICAS (OBLIGATORIO CUMPLIR AL 100%)
+═══════════════════════════════════════════════════════════════════
 
-            **PRINCIPIOS CIENTÍFICOS (DEBES SEGUIR ESTO ESTRICTAMENTE):**
-            ${scientificKnowledge}
+🔴 REGLA #1 - DÍAS EXACTOS (LA MÁS IMPORTANTE):
+El array "dias" de la Semana 1 DEBE contener EXACTAMENTE ${available_days} elementos.
+• Si ${available_days} = 2 → genera 2 días (ej: Full Body A, Full Body B)
+• Si ${available_days} = 3 → genera 3 días (ej: Push, Pull, Legs)
+• Si ${available_days} = 4 → genera 4 días (ej: Upper, Lower, Upper, Lower)
+• Si ${available_days} = 5 → genera 5 días (ej: Push, Pull, Legs, Upper, Lower)
+• Si ${available_days} = 6 → genera 6 días (ej: Push, Pull, Legs, Push, Pull, Legs)
 
-            **CONOCIMIENTO SOBRE MEJORES EJERCICIOS (TIER LIST):**
-            ${exercisesKnowledge}
+NO generes 3 días si el usuario pidió 6. NO generes 4 si pidió 5. EXACTAMENTE ${available_days} elementos.
 
-            **CATÁLOGO DE EJERCICIOS PERMITIDOS:**
-            - Utiliza ejercicios SOLAMENTE de esta lista JSON: ${exerciseList}
+🔴 REGLA #2 - EJERCICIOS TIER S/A PRIORITARIOS:
+Usa SIEMPRE estos ejercicios como base (están en Tier S/A científicamente):
+• Pecho: Bench Press (Barbell), Dumbbell Chest Press, Incline Bench Press
+• Espalda: Barbell Row, Pull-ups, Lat Pulldown, Seated Cable Row
+• Piernas: Barbell Squat, Romanian Deadlift, Bulgarian Split Squat, Leg Press
+• Hombros: Overhead Press (Barbell o Dumbbell), Lateral Raises
+• Brazos: Barbell Curl, Triceps Dips, Rope Pushdowns
 
-            **FORMATO DE SALIDA OBLIGATORIO (JSON - MUY IMPORTANTE):**
-            Tu respuesta debe ser SOLAMENTE un objeto JSON válido.
-            La clave raíz DEBE ser "rutina_periodizada".
-            "rutina_periodizada" DEBE ser un ARRAY de objetos de Semana, UNO POR CADA SEMANA DEL MESOCICLO.
-            CADA objeto de Semana (de 1 a 6) DEBE contener un array de "dias" que detalle los ejercicios para esa semana.
-            NO mezcles estructuras; no pongas "ajustes" en lugar de "dias" en las semanas 2-6. Genera el plan completo.
+Si el usuario tiene lesiones o pide "comodidad", usa alternativas con máquinas (ej: Chest Press Machine en lugar de Bench Press).
 
-            {
-              "rutina_periodizada": [
-                {
-                  "semana": 1,
-                  "fase": "Acumulación - Volumen Base",
-                  "dias": [
-                    {
-                      "dia_entrenamiento": "Día 1 - Push (Pecho/Hombro/Tríceps)",
-                      "grupos": [
-                        {
-                          "grupo_muscular": "Pecho (Básico)",
-                          "ejercicios": [
-                            {
-                              "nombre": "Press Banca",
-                              "series": "4",
-                              "repeticiones": "8-10",
-                              "carga_notacion": "RPE 7",
-                              "nota": "..."
-                            }
-                  _       ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-      _       }
-        `; // <-- FIN DEL PROMPT
+🔴 REGLA #3 - VOLUMEN REALISTA:
+• Hipertrofia: 3-5 series por ejercicio, 8-15 repeticiones
+• Fuerza: 3-6 series por ejercicio, 3-6 repeticiones
+• Mixto: 3-5 series, 6-12 repeticiones
+• Total por grupo muscular: 10-20 series SEMANALES (suma de todos los ejercicios)
 
-    console.log(
-      "Paso 4: Llamando a la API de OpenAI (chat.completions.create)..."
-    );
+🔴 REGLA #4 - NOTACIÓN CORRECTA:
+• Si user_notation = "RPE / RIR (Moderno)" → usa "RPE 7", "RPE 8", "RIR 2", etc.
+• Si user_notation = "Tradicional (Al Fallo)" → usa "Peso moderado", "Peso pesado", "Al fallo"
 
-    // Use a deterministic generation and a system message that enforces strict JSON-only output
+🔴 REGLA #5 - VARIEDAD EN CADA DÍA:
+Cada día debe tener 2-3 ejercicios por grupo muscular grande (pecho, espalda, piernas).
+Ejemplo Día Push: Press Banca (compuesto) + Incline Dumbbell Press (compuesto) + Cable Flyes (aislamiento).
+
+🔴 REGLA #6 - USAR SOLO EJERCICIOS DEL CATÁLOGO:
+Todos los nombres de ejercicios deben estar EXACTAMENTE como aparecen en el catálogo JSON. Si un ejercicio ideal no existe, busca el más similar en el catálogo.
+
+═══════════════════════════════════════════════════════════════════
+CONOCIMIENTO CIENTÍFICO (APLICAR ESTOS PRINCIPIOS)
+═══════════════════════════════════════════════════════════════════
+${scientificKnowledge}
+
+═══════════════════════════════════════════════════════════════════
+TIER LIST DE MEJORES EJERCICIOS (USAR ESTOS PRIMERO)
+═══════════════════════════════════════════════════════════════════
+${exercisesKnowledge}
+
+═══════════════════════════════════════════════════════════════════
+CATÁLOGO DE EJERCICIOS DISPONIBLES
+═══════════════════════════════════════════════════════════════════
+${exerciseList}
+
+═══════════════════════════════════════════════════════════════════
+FORMATO DE SALIDA (JSON ESTRICTO)
+═══════════════════════════════════════════════════════════════════
+Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura:
+
+{
+  "rutina_periodizada": [
+    {
+      "semana": 1,
+      "fase": "Acumulación - Volumen Base",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Push (Pecho/Hombro/Tríceps)",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Compuesto)",
+              "ejercicios": [
+                {
+                  "nombre": "Bench Press (Barbell)",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Ejercicio base de empuje"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "semana": 2,
+      "fase": "Intensificación - RPE 8",
+      "dias": "Mismo patrón que Semana 1, incrementar RPE a 8"
+    }
+  ]
+}
+
+✅ VALIDACIÓN FINAL ANTES DE RESPONDER:
+1. ¿El array "dias" de Semana 1 tiene EXACTAMENTE ${available_days} elementos? Si no, CORRIGE.
+2. ¿Usaste ejercicios Tier S/A como Bench Press, Squat, Barbell Row? Si no, CORRIGE.
+3. ¿Las series son 3-5 por ejercicio? Si no, CORRIGE.
+4. ¿La notación es ${user_notation}? Si no, CORRIGE.
+
+Genera el JSON ahora:`;
+
+    console.log("Llamando a la API de OpenAI...");
+
     const response = await openai.chat.completions.create({
       model: GPT_MODEL,
       messages: [
@@ -212,12 +261,9 @@ serve(async (req) => {
       response_format: { type: "json_object" },
     });
 
-    console.log(
-      "Paso 5: Respuesta de OpenAI recibida. Validando y reparando JSON si es necesario."
-    );
+    console.log("Respuesta de OpenAI recibida. Validando JSON...");
     const jsonOutput = response.choices[0].message.content;
 
-    // Intentamos parsear la salida y asegurar que todas las semanas tengan `dias` como array.
     try {
       if (!jsonOutput || typeof jsonOutput !== "string") {
         throw new Error("La respuesta de OpenAI no es un string JSON válido.");
@@ -226,6 +272,17 @@ serve(async (req) => {
 
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
         const baseWeeks = parsed.rutina_periodizada;
+        
+        // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
+        if (baseWeeks[0] && Array.isArray(baseWeeks[0].dias)) {
+          const generatedDays = baseWeeks[0].dias.length;
+          if (generatedDays !== available_days) {
+            console.warn(`⚠️ ADVERTENCIA: Se generaron ${generatedDays} días pero el usuario pidió ${available_days}`);
+          } else {
+            console.log(`✅ Validación correcta: ${generatedDays} días generados`);
+          }
+        }
+
         const baseWeek0Dias = Array.isArray(baseWeeks[0]?.dias)
           ? baseWeeks[0].dias
           : [];
@@ -238,7 +295,6 @@ serve(async (req) => {
               JSON.parse(JSON.stringify(d))
             );
 
-            // Detect RPE change
             let targetRPE: string | null = null;
             if (description.includes("rpe 9") || description.includes("rpe9"))
               targetRPE = "RPE 9";
@@ -318,7 +374,7 @@ serve(async (req) => {
         );
 
         const repaired = JSON.stringify(parsed);
-        console.log("Paso 5.B: JSON reparado y listo para devolver.");
+        console.log("JSON reparado y listo para devolver.");
         return new Response(repaired, {
           headers: { "Content-Type": "application/json" },
           status: 200,
@@ -326,10 +382,8 @@ serve(async (req) => {
       }
     } catch (e: any) {
       console.warn("No se pudo parsear la salida de OpenAI o repararla:", e);
-      // Caerá a devolver el output original abajo
     }
 
-    // Si no pudimos parsear o no había rutina_periodizada, devolvemos el contenido original
     return new Response(
       jsonOutput ?? JSON.stringify({ error: "Respuesta vacía de OpenAI" }),
       {
@@ -344,4 +398,4 @@ serve(async (req) => {
       status: 500,
     });
   }
-}); // <-- CORRECCIÓN: ESTA ES LA LÍNEA FINAL. EL PARÉNTESIS EXTRA (`)`) SE HA ELIMINADO.
+});
