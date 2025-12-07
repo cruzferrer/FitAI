@@ -268,8 +268,14 @@ Genera el JSON ahora:`;
         throw new Error("La respuesta de OpenAI no es un string JSON válido.");
       }
       const parsed = JSON.parse(jsonOutput);
+      console.log("✅ JSON parsed successfully, checking structure...");
+      console.log(`Structure keys: ${Object.keys(parsed).join(", ")}`);
+      console.log(
+        `Has rutina_periodizada: ${!!parsed.rutina_periodizada}, is array: ${Array.isArray(parsed.rutina_periodizada)}`
+      );
 
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
+        console.log(`✅ Routine structure valid, ${parsed.rutina_periodizada.length} weeks`);
         const baseWeeks = parsed.rutina_periodizada;
 
         // ===== GIF MAPPING SETUP =====
