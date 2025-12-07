@@ -49,8 +49,9 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
     prescribed_carga: ejercicio.carga_notacion,
     prescribed_reps: ejercicio.repeticiones,
     actual_kg: "",
-      const gifValue = ejercicio.gif_url ?? ejercicio.gifUrl;
-      const gifSource = gifValue ? { uri: gifValue } : null;
+    actual_metric: "",
+    actual_reps: "",
+    completed: false,
   }));
 
   const [sets, setSets] = useState<SetRecord[]>(initialSets);
@@ -93,8 +94,8 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   const openMetrics = () => {
     router.push("/(tabs)/metrics");
   };
-
-  const gifSource = ejercicio.gif_url ? { uri: ejercicio.gif_url } : null;
+  const gifValue = ejercicio.gif_url ?? (ejercicio as any).gifUrl;
+  const gifSource = gifValue ? { uri: gifValue } : null;
 
   return (
     <View style={styles.exerciseBlock}>
