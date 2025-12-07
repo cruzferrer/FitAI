@@ -107,7 +107,7 @@ serve(async (req) => {
     console.log("Obteniendo catálogo de ejercicios...");
     const { data: exerciseData, error: dbError } = await supabaseClient
       .from("ejercicios")
-      .select("name, targetMuscles, bodyParts, equipments, gifUrl, gif_url")
+      .select("name, targetMuscles, bodyParts, equipments, gifUrl")
       .limit(200);
 
     if (dbError)
@@ -271,11 +271,15 @@ Genera el JSON ahora:`;
       console.log("✅ JSON parsed successfully, checking structure...");
       console.log(`Structure keys: ${Object.keys(parsed).join(", ")}`);
       console.log(
-        `Has rutina_periodizada: ${!!parsed.rutina_periodizada}, is array: ${Array.isArray(parsed.rutina_periodizada)}`
+        `Has rutina_periodizada: ${!!parsed.rutina_periodizada}, is array: ${Array.isArray(
+          parsed.rutina_periodizada
+        )}`
       );
 
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
-        console.log(`✅ Routine structure valid, ${parsed.rutina_periodizada.length} weeks`);
+        console.log(
+          `✅ Routine structure valid, ${parsed.rutina_periodizada.length} weeks`
+        );
         const baseWeeks = parsed.rutina_periodizada;
 
         // ===== GIF MAPPING SETUP =====
@@ -283,12 +287,12 @@ Genera el JSON ahora:`;
           (n ?? "").trim().toLowerCase();
 
         const gifMap = new Map(
-          (exerciseData || []).map((e: any) => [e.name, e.gifUrl || e.gif_url])
+          (exerciseData || []).map((e: any) => [e.name, e.gifUrl])
         );
         const gifMapNormalized = new Map(
           (exerciseData || []).map((e: any) => [
             normalizeName(e.name),
-            e.gifUrl || e.gif_url,
+            e.gifUrl,
           ])
         );
 
