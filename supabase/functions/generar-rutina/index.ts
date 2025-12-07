@@ -113,6 +113,18 @@ serve(async (req) => {
     if (dbError)
       throw new Error("Error al obtener ejercicios: " + dbError.message);
 
+    console.log(
+      `📦 Loaded ${exerciseData?.length || 0} exercises from catalog`
+    );
+    if (exerciseData && exerciseData.length > 0) {
+      console.log(
+        `Sample exercise names: ${exerciseData
+          .slice(0, 5)
+          .map((e: any) => e.name)
+          .join(" | ")}`
+      );
+    }
+
     const exerciseList = JSON.stringify(exerciseData);
     console.log("Creando prompt optimizado...");
 
@@ -302,10 +314,31 @@ Genera el JSON ahora:`;
 
         const getGifForExercise = (name: string | null | undefined) => {
           if (!name) return null;
+
+          // Exact match first
           const direct = gifMap.get(name);
           if (direct) return direct;
+
+          // Normalized match
           const norm = normalizeName(name);
-          return gifMapNormalized.get(norm) ?? null;
+          const normalized = gifMapNormalized.get(norm);
+          if (normalized) return normalized;
+
+          // Fuzzy match: check if any exercise name contains key words
+          const nameWords = norm.split(/\s+/);
+          for (const [catalogName, gifUrl] of gifMapNormalized) {
+            const catalogWords = catalogName.split(/\s+/);
+            // If at least 2 words match, consider it a match
+            const matchedWords = nameWords.filter((w) =>
+              catalogWords.includes(w)
+            );
+            if (matchedWords.length >= 2) {
+              console.log(`🔗 Fuzzy matched: "${name}" → "${catalogName}"`);
+              return gifUrl;
+            }
+          }
+
+          return null;
         };
 
         const applyGifUrls = (weeks: any[]) => {
