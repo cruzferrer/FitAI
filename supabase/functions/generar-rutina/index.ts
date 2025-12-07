@@ -120,7 +120,10 @@ serve(async (req) => {
       (exerciseData || []).map((e: any) => [e.name, e.gifUrl || e.gif_url])
     );
     const gifMapNormalized = new Map(
-      (exerciseData || []).map((e: any) => [normalizeName(e.name), e.gifUrl || e.gif_url])
+      (exerciseData || []).map((e: any) => [
+        normalizeName(e.name),
+        e.gifUrl || e.gif_url,
+      ])
     );
 
     const getGifForExercise = (name: string | null | undefined) => {
@@ -290,8 +293,15 @@ Genera el JSON ahora:`;
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
         const baseWeeks = parsed.rutina_periodizada;
 
+        console.log(
+          `GIF Map initialized with ${gifMap.size} entries (normalized: ${gifMapNormalized.size})`
+        );
+
         const applyGifUrls = (weeks: any[]) => {
           const missing: string[] = [];
+          let matched = 0;
+          let total = 0;
+
           weeks.forEach((w: any) => {
             if (!w || !Array.isArray(w.dias)) return;
             w.dias.forEach((d: any) => {
@@ -300,15 +310,21 @@ Genera el JSON ahora:`;
                 if (!g || !Array.isArray(g.ejercicios)) return;
                 g.ejercicios.forEach((ej: any) => {
                   if (!ej) return;
-                  if (!ej.gif_url) {
+                  total++;
+                  if (!ej.gif_url || !ej.gif_url.trim()) {
                     const gif = getGifForExercise(ej.nombre);
                     if (gif) {
                       ej.gif_url = gif;
                       ej.gifUrl = gif;
+                      matched++;
+                      console.log(
+                        `✅ GIF matched: "${ej.nombre}" → ${gif.substring(0, 50)}...`
+                      );
                     } else {
                       missing.push(ej.nombre ?? "(sin nombre)");
                       ej.gif_url = null;
                       ej.gifUrl = null;
+                      console.warn(`❌ GIF NOT found for: "${ej.nombre}"`);
                     }
                   }
                 });
@@ -318,11 +334,18 @@ Genera el JSON ahora:`;
 
           if (missing.length > 0) {
             console.warn(
-              `⚠️ Ejercicios sin gif_url en catálogo: ${missing
-                .slice(0, 10)
-                .join(", ")} ${missing.length > 10 ? "..." : ""}`
+              `⚠️ Ejercicios sin GIF (${missing.length}/${total}): ${missing
+                .slice(0, 5)
+                .join(", ")} ${missing.length > 5 ? `... (+${missing.length - 5} más)` : ""}`
+            );
+          } else {
+            console.log(
+              `✅ Todos los ejercicios (${total}) tienen GIF asignado`
             );
           }
+          console.log(
+            `📊 GIF Assignment Summary: ${matched}/${total} matched`
+          );
         };
 
         // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
