@@ -24,6 +24,7 @@ interface SetRecord {
   prescribed_carga: string;
   prescribed_reps: string;
   actual_kg: string; // Input del usuario
+  actual_metric?: string; // RPE o RIR registrado
   actual_reps: string; // Input del usuario
   completed: boolean; // Estado del checkbox
 }
@@ -70,6 +71,7 @@ export const useWorkoutLogger = () => {
       prescribed_carga: ejercicio.carga_notacion,
       prescribed_reps: ejercicio.repeticiones,
       actual_kg: "",
+      actual_metric: "",
       actual_reps: "",
       completed: false,
     }));

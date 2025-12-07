@@ -53,6 +53,7 @@ export const useWorkoutData = () => {
       prescribed_carga: ejercicio.carga_notacion,
       prescribed_reps: ejercicio.repeticiones,
       actual_kg: "",
+      actual_metric: "",
       actual_reps: "",
       completed: false,
     }));

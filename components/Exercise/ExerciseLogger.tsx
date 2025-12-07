@@ -31,6 +31,12 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   grupoMuscular,
   onLogUpdate,
 }) => {
+  const metricLabel: "RPE" | "RIR" = ejercicio.carga_notacion
+    ?.toUpperCase()
+    .includes("RPE")
+    ? "RPE"
+    : "RIR";
+
   // Inicializa el estado de las series con los datos prescritos por la IA
   const initialSets: SetRecord[] = Array.from({
     length: parseInt(ejercicio.series, 10) || 0,
@@ -38,6 +44,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
     prescribed_carga: ejercicio.carga_notacion,
     prescribed_reps: ejercicio.repeticiones,
     actual_kg: "",
+    actual_metric: "",
     actual_reps: "",
     completed: false,
   }));
@@ -63,6 +70,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
       prescribed_carga: sets[0]?.prescribed_carga || "RPE 7",
       prescribed_reps: sets[0]?.prescribed_reps || "8-10",
       actual_kg: "",
+      actual_metric: "",
       actual_reps: "",
       completed: false,
     };
@@ -99,7 +107,8 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>SET</Text>
         <Text style={styles.headerText}>PRESC.</Text>
-        <Text style={styles.headerText}>KG/RPE</Text>
+        <Text style={styles.headerText}>KG</Text>
+        <Text style={styles.headerText}>{metricLabel}</Text>
         <Text style={styles.headerText}>REPS</Text>
         <View style={{ width: 30 }} />
       </View>
@@ -110,6 +119,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
           key={setIndex}
           set={set}
           setIndex={setIndex}
+          metricLabel={metricLabel}
           onUpdateSet={handleUpdateSet}
         />
       ))}

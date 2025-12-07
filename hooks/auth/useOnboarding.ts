@@ -73,6 +73,36 @@ export const useOnboarding = () => {
     loadSavedPreferences();
   }, []);
 
+  // Si el objetivo es fuerza, aseguramos la notación moderna RPE/RIR
+  useEffect(() => {
+    if (objective === "Fuerza" && notation !== "RPE / RIR (Moderno)") {
+      setNotation("RPE / RIR (Moderno)");
+      savePreferences({
+        objective,
+        experience,
+        days,
+        equipment,
+        notation: "RPE / RIR (Moderno)",
+        generationPreference,
+        preferredExercises,
+        injuries,
+        timePerSession,
+        comfortPreference,
+      });
+    }
+  }, [
+    objective,
+    notation,
+    experience,
+    days,
+    equipment,
+    generationPreference,
+    preferredExercises,
+    injuries,
+    timePerSession,
+    comfortPreference,
+  ]);
+
   // Guardar preferencias cada vez que cambien
   const savePreferences = async (prefs: any) => {
     try {
@@ -87,13 +117,19 @@ export const useOnboarding = () => {
 
   // Actualizar setters para guardar automáticamente
   const wrappedSetObjective = (val: string | null) => {
+    // Para fuerza, forzar la notación moderna RPE/RIR
+    const nextNotation =
+      val === "Fuerza" ? "RPE / RIR (Moderno)" : notation;
+
     setObjective(val);
+    setNotation(nextNotation);
+
     savePreferences({
       objective: val,
       experience,
       days,
       equipment,
-      notation,
+      notation: nextNotation,
       generationPreference,
       preferredExercises,
       injuries,
