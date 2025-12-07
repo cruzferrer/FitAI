@@ -454,7 +454,9 @@ Genera el JSON ahora:`;
           return copy;
         });
 
+        console.log("🎬 About to call applyGifUrls...");
         applyGifUrls(parsed.rutina_periodizada);
+        console.log("✅ applyGifUrls completed");
 
         const repaired = JSON.stringify(parsed);
         console.log("JSON reparado y listo para devolver.");
