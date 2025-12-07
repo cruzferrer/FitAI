@@ -113,9 +113,23 @@ serve(async (req) => {
     if (dbError)
       throw new Error("Error al obtener ejercicios: " + dbError.message);
 
+    const normalizeName = (n: string | null | undefined) =>
+      (n ?? "").trim().toLowerCase();
+
     const gifMap = new Map(
       (exerciseData || []).map((e: any) => [e.name, e.gif_url])
     );
+    const gifMapNormalized = new Map(
+      (exerciseData || []).map((e: any) => [normalizeName(e.name), e.gif_url])
+    );
+
+    const getGifForExercise = (name: string | null | undefined) => {
+      if (!name) return null;
+      const direct = gifMap.get(name);
+      if (direct) return direct;
+      const norm = normalizeName(name);
+      return gifMapNormalized.get(norm) ?? null;
+    };
 
     const exerciseList = JSON.stringify(exerciseData);
     console.log("Creando prompt optimizado...");
@@ -277,6 +291,7 @@ Genera el JSON ahora:`;
         const baseWeeks = parsed.rutina_periodizada;
 
         const applyGifUrls = (weeks: any[]) => {
+          const missing: string[] = [];
           weeks.forEach((w: any) => {
             if (!w || !Array.isArray(w.dias)) return;
             w.dias.forEach((d: any) => {
@@ -284,14 +299,28 @@ Genera el JSON ahora:`;
               d.grupos.forEach((g: any) => {
                 if (!g || !Array.isArray(g.ejercicios)) return;
                 g.ejercicios.forEach((ej: any) => {
-                  if (ej && !ej.gif_url) {
-                    const gif = gifMap.get(ej.nombre);
-                    if (gif) ej.gif_url = gif;
+                  if (!ej) return;
+                  if (!ej.gif_url) {
+                    const gif = getGifForExercise(ej.nombre);
+                    if (gif) {
+                      ej.gif_url = gif;
+                    } else {
+                      missing.push(ej.nombre ?? "(sin nombre)");
+                      ej.gif_url = null;
+                    }
                   }
                 });
               });
             });
           });
+
+          if (missing.length > 0) {
+            console.warn(
+              `⚠️ Ejercicios sin gif_url en catálogo: ${missing
+                .slice(0, 10)
+                .join(", ")} ${missing.length > 10 ? "..." : ""}`
+            );
+          }
         };
 
         // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
