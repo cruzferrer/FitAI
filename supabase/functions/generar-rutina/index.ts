@@ -343,6 +343,7 @@ Genera el JSON ahora:`;
 
         const applyGifUrls = (weeks: any[]) => {
           const missing: string[] = [];
+          let alreadyHad = 0;
           let matched = 0;
           let total = 0;
 
@@ -353,46 +354,46 @@ Genera el JSON ahora:`;
               d.grupos.forEach((g: any) => {
                 if (!g || !Array.isArray(g.ejercicios)) return;
                 g.ejercicios.forEach((ej: any) => {
-                  if (!ej) return;
+                  if (!ej || !ej.nombre) return;
                   total++;
-                  if (!ej.gif_url || !ej.gif_url.trim()) {
-                    const gif = getGifForExercise(ej.nombre);
-                    if (gif) {
-                      ej.gif_url = gif;
-                      ej.gifUrl = gif;
-                      matched++;
-                      console.log(
-                        `✅ GIF matched: "${ej.nombre}" → ${gif.substring(
-                          0,
-                          50
-                        )}...`
-                      );
-                    } else {
-                      missing.push(ej.nombre ?? "(sin nombre)");
-                      ej.gif_url = null;
-                      ej.gifUrl = null;
-                      console.warn(`❌ GIF NOT found for: "${ej.nombre}"`);
-                    }
+                  
+                  // Check if exercise already has gifUrl embedded
+                  const existingGif = ej.gifUrl || (ej as any).gif_url;
+                  if (existingGif && typeof existingGif === 'string' && existingGif.trim()) {
+                    alreadyHad++;
+                    // Normalize to gif_url property
+                    ej.gif_url = existingGif;
+                    ej.gifUrl = existingGif;
+                    console.log(`📦 Already embedded: "${ej.nombre}"`);
+                    return;
+                  }
+                  
+                  // Try to find GIF in catalog
+                  const gif = getGifForExercise(ej.nombre);
+                  if (gif) {
+                    ej.gif_url = gif;
+                    ej.gifUrl = gif;
+                    matched++;
+                    console.log(
+                      `✅ GIF matched from catalog: "${ej.nombre}" → ${gif.substring(0, 50)}...`
+                    );
+                  } else {
+                    missing.push(ej.nombre);
+                    console.warn(`❌ GIF NOT found for: "${ej.nombre}"`);
                   }
                 });
               });
             });
           });
 
+          console.log(
+            `📊 GIF Summary: ${alreadyHad} embedded + ${matched} from catalog = ${alreadyHad + matched}/${total} total`
+          );
           if (missing.length > 0) {
             console.warn(
-              `⚠️ Ejercicios sin GIF (${missing.length}/${total}): ${missing
-                .slice(0, 5)
-                .join(", ")} ${
-                missing.length > 5 ? `... (+${missing.length - 5} más)` : ""
-              }`
-            );
-          } else {
-            console.log(
-              `✅ Todos los ejercicios (${total}) tienen GIF asignado`
+              `⚠️ Missing GIFs (${missing.length}): ${missing.slice(0, 5).join(", ")} ${missing.length > 5 ? `... (+${missing.length - 5} más)` : ""}`
             );
           }
-          console.log(`📊 GIF Assignment Summary: ${matched}/${total} matched`);
         };
 
         // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
