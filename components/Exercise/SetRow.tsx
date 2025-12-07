@@ -81,10 +81,10 @@ const SetRow: React.FC<SetRowProps> = ({
         <TextInput
           style={[setStyles.input, isCompleted && setStyles.inputCompleted]}
           keyboardType="numeric"
-          placeholder="Kg"
+          placeholder={metricLabel}
           placeholderTextColor={COLORS.secondaryText}
-          value={set.actual_kg}
-          onChangeText={(value) => handleChange("actual_kg", value)}
+          value={set.actual_metric || ""}
+          onChangeText={(value) => handleChange("actual_metric", value)}
           editable={!isCompleted}
         />
       </View>
@@ -93,10 +93,10 @@ const SetRow: React.FC<SetRowProps> = ({
         <TextInput
           style={[setStyles.input, isCompleted && setStyles.inputCompleted]}
           keyboardType="numeric"
-          placeholder={metricLabel}
+          placeholder="Kg"
           placeholderTextColor={COLORS.secondaryText}
-          value={set.actual_metric || ""}
-          onChangeText={(value) => handleChange("actual_metric", value)}
+          value={set.actual_kg}
+          onChangeText={(value) => handleChange("actual_kg", value)}
           editable={!isCompleted}
         />
       </View>

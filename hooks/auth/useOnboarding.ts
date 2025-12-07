@@ -118,8 +118,7 @@ export const useOnboarding = () => {
   // Actualizar setters para guardar automáticamente
   const wrappedSetObjective = (val: string | null) => {
     // Para fuerza, forzar la notación moderna RPE/RIR
-    const nextNotation =
-      val === "Fuerza" ? "RPE / RIR (Moderno)" : notation;
+    const nextNotation = val === "Fuerza" ? "RPE / RIR (Moderno)" : notation;
 
     setObjective(val);
     setNotation(nextNotation);

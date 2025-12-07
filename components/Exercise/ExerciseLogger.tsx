@@ -107,8 +107,8 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>SET</Text>
         <Text style={styles.headerText}>PRESC.</Text>
-        <Text style={styles.headerText}>KG</Text>
         <Text style={styles.headerText}>{metricLabel}</Text>
+        <Text style={styles.headerText}>KG</Text>
         <Text style={styles.headerText}>REPS</Text>
         <View style={{ width: 30 }} />
       </View>

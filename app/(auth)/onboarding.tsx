@@ -69,7 +69,7 @@ const OnboardingScreen: React.FC = () => {
           options={OPTIONS.notation}
           selectedValue={notation}
           onSelect={(val) => setNotation(val as string)}
-          disabled={isLoading}
+          disabled={isLoading || objective === "Fuerza"}
         />
 
         <PrimaryButton
