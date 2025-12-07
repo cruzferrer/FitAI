@@ -5,10 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Image,
+  Pressable,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import SetRow, { SetRecord } from "./SetRow"; // Importamos el SetRow
+import { useRouter } from "expo-router";
 
 // Tipos de datos que recibe este componente
 interface EjercicioPrescrito {
@@ -18,6 +21,7 @@ interface EjercicioPrescrito {
   carga_notacion: string;
   nota?: string;
   descanso?: string;
+  gif_url?: string;
 }
 
 interface ExerciseLoggerProps {
@@ -31,6 +35,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   grupoMuscular,
   onLogUpdate,
 }) => {
+  const router = useRouter();
   const metricLabel: "RPE" | "RIR" = ejercicio.carga_notacion
     ?.toUpperCase()
     .includes("RPE")
@@ -86,10 +91,33 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
         : `Descanso: ${ejercicio.descanso}`
       : "Añadir notas aquí...";
 
+  const openMetrics = () => {
+    router.push("/(tabs)/metrics");
+  };
+
+  const gifSource = ejercicio.gif_url
+    ? { uri: ejercicio.gif_url }
+    : null;
+
   return (
     <View style={styles.exerciseBlock}>
-      <Text style={styles.groupSubtitle}>{grupoMuscular.toUpperCase()}</Text>
-      <Text style={styles.exerciseTitle}>{ejercicio.nombre}</Text>
+      <Pressable style={styles.headerRowInfo} onPress={openMetrics}>
+        {gifSource ? (
+          <Image source={gifSource} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <MaterialCommunityIcons
+              name="play-circle-outline"
+              size={20}
+              color={COLORS.secondaryText}
+            />
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.groupSubtitle}>{grupoMuscular.toUpperCase()}</Text>
+          <Text style={styles.exerciseTitle}>{ejercicio.nombre}</Text>
+        </View>
+      </Pressable>
 
       {/* Caja de notas del usuario (Permite editar) */}
       <View style={styles.notesContainer}>
@@ -154,8 +182,26 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: COLORS.primaryText,
-    marginBottom: 5,
+    marginBottom: 2,
     textTransform: "capitalize",
+  },
+  headerRowInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 10,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.inputBackground,
+    borderWidth: 1,
+    borderColor: COLORS.separator,
+  },
+  avatarPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   notesContainer: {
     marginBottom: 15,

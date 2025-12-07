@@ -17,6 +17,7 @@ interface EjercicioPrescrito {
   carga_notacion: string;
   nota?: string;
   descanso?: string;
+  gif_url?: string;
 }
 
 // Lo que el usuario registra
