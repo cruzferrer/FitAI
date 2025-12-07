@@ -107,7 +107,7 @@ serve(async (req) => {
     console.log("Obteniendo catálogo de ejercicios...");
     const { data: exerciseData, error: dbError } = await supabaseClient
       .from("ejercicios")
-      .select("name, targetMuscles, bodyParts, equipments, gifUrl")
+      .select("exerciseId, name, targetMuscles, bodyParts, equipments, gifUrl")
       .limit(200);
 
     if (dbError)
@@ -192,8 +192,13 @@ Si el usuario tiene lesiones o pide "comodidad", usa alternativas con máquinas 
 Cada día debe tener 2-3 ejercicios por grupo muscular grande (pecho, espalda, piernas).
 Ejemplo Día Push: Press Banca (compuesto) + Incline Dumbbell Press (compuesto) + Cable Flyes (aislamiento).
 
-🔴 REGLA #6 - USAR SOLO EJERCICIOS DEL CATÁLOGO:
-Todos los nombres de ejercicios deben estar EXACTAMENTE como aparecen en el catálogo JSON. Si un ejercicio ideal no existe, busca el más similar en el catálogo.
+🔴 REGLA #6 - USAR SOLO EJERCICIOS DEL CATÁLOGO CON SU ID:
+**CRÍTICO**: Para CADA ejercicio que incluyas, DEBES:
+1. Encontrarlo en el catálogo JSON que viene abajo
+2. Usar su NOMBRE EXACTO como aparece en el catálogo
+3. INCLUIR su "exerciseId" en tu respuesta JSON
+4. Si un ejercicio ideal no existe exactamente, busca el más similar y usa ESE ejerciseId.
+Ejemplo: Si quieres "Bench Press Barbell", usa {"nombre": "Bench Press (Barbell)", "exerciseId": "<el ID del catálogo>", ...}
 
 ═══════════════════════════════════════════════════════════════════
 CONOCIMIENTO CIENTÍFICO (APLICAR ESTOS PRINCIPIOS)
@@ -229,6 +234,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura:
               "ejercicios": [
                 {
                   "nombre": "Bench Press (Barbell)",
+                  "exerciseId": "EjXYZ123",
                   "series": "4",
                   "repeticiones": "8-10",
                   "carga_notacion": "RPE 7",
@@ -295,10 +301,15 @@ Genera el JSON ahora:`;
         const baseWeeks = parsed.rutina_periodizada;
 
         // ===== GIF MAPPING SETUP =====
+        // Create a map from exerciseId to gifUrl
+        const gifMapById = new Map(
+          (exerciseData || []).map((e: any) => [e.exerciseId, e.gifUrl])
+        );
+        // Also keep name-based maps as fallback
         const normalizeName = (n: string | null | undefined) =>
           (n ?? "").trim().toLowerCase();
 
-        const gifMap = new Map(
+        const gifMapByName = new Map(
           (exerciseData || []).map((e: any) => [e.name, e.gifUrl])
         );
         const gifMapNormalized = new Map(
@@ -309,36 +320,28 @@ Genera el JSON ahora:`;
         );
 
         console.log(
-          `GIF Map initialized with ${gifMap.size} entries (normalized: ${gifMapNormalized.size})`
+          `GIF Maps ready: ${gifMapById.size} by ID, ${gifMapByName.size} by name, ${gifMapNormalized.size} normalized`
         );
 
-        const getGifForExercise = (name: string | null | undefined) => {
+        const getGifForExercise = (exerciseId: string | null | undefined, name: string | null | undefined) => {
           if (!name) return null;
 
-          // Exact match first
-          const direct = gifMap.get(name);
-          if (direct) return direct;
-
-          // Normalized match
-          const norm = normalizeName(name);
-          const normalized = gifMapNormalized.get(norm);
-          if (normalized) return normalized;
-
-          // Fuzzy match: check if any exercise name contains key words
-          const nameWords = norm.split(/\s+/);
-          for (const [catalogName, gifUrl] of gifMapNormalized) {
-            const catalogWords = catalogName.split(/\s+/);
-            // If at least 2 words match, consider it a match
-            const matchedWords = nameWords.filter((w) =>
-              catalogWords.includes(w)
-            );
-            if (matchedWords.length >= 2) {
-              console.log(`🔗 Fuzzy matched: "${name}" → "${catalogName}"`);
-              return gifUrl;
+          // Priority 1: Use exerciseId if available
+          if (exerciseId) {
+            const gifById = gifMapById.get(exerciseId);
+            if (gifById) {
+              console.log(`✅ GIF found by ID: "${exerciseId}"`);
+              return gifById;
             }
           }
 
-          return null;
+          // Priority 2: Exact name match
+          const directName = gifMapByName.get(name);
+          if (directName) return directName;
+
+          // Priority 3: Normalized name match
+          const norm = normalizeName(name);
+          return gifMapNormalized.get(norm) ?? null;
         };
 
         const applyGifUrls = (weeks: any[]) => {
@@ -356,10 +359,14 @@ Genera el JSON ahora:`;
                 g.ejercicios.forEach((ej: any) => {
                   if (!ej || !ej.nombre) return;
                   total++;
-                  
+
                   // Check if exercise already has gifUrl embedded
                   const existingGif = ej.gifUrl || (ej as any).gif_url;
-                  if (existingGif && typeof existingGif === 'string' && existingGif.trim()) {
+                  if (
+                    existingGif &&
+                    typeof existingGif === "string" &&
+                    existingGif.trim()
+                  ) {
                     alreadyHad++;
                     // Normalize to gif_url property
                     ej.gif_url = existingGif;
@@ -367,19 +374,19 @@ Genera el JSON ahora:`;
                     console.log(`📦 Already embedded: "${ej.nombre}"`);
                     return;
                   }
-                  
-                  // Try to find GIF in catalog
-                  const gif = getGifForExercise(ej.nombre);
+
+                  // Try to find GIF in catalog (by ID first, then by name)
+                  const gif = getGifForExercise(ej.exerciseId, ej.nombre);
                   if (gif) {
                     ej.gif_url = gif;
                     ej.gifUrl = gif;
                     matched++;
                     console.log(
-                      `✅ GIF matched from catalog: "${ej.nombre}" → ${gif.substring(0, 50)}...`
+                      `✅ GIF matched: "${ej.nombre}" (ID: ${ej.exerciseId || "N/A"}) → ${gif.substring(0, 50)}...`
                     );
                   } else {
                     missing.push(ej.nombre);
-                    console.warn(`❌ GIF NOT found for: "${ej.nombre}"`);
+                    console.warn(`❌ GIF NOT found for: "${ej.nombre}" (ID: ${ej.exerciseId || "N/A"})`);
                   }
                 });
               });
@@ -387,11 +394,17 @@ Genera el JSON ahora:`;
           });
 
           console.log(
-            `📊 GIF Summary: ${alreadyHad} embedded + ${matched} from catalog = ${alreadyHad + matched}/${total} total`
+            `📊 GIF Summary: ${alreadyHad} embedded + ${matched} from catalog = ${
+              alreadyHad + matched
+            }/${total} total`
           );
           if (missing.length > 0) {
             console.warn(
-              `⚠️ Missing GIFs (${missing.length}): ${missing.slice(0, 5).join(", ")} ${missing.length > 5 ? `... (+${missing.length - 5} más)` : ""}`
+              `⚠️ Missing GIFs (${missing.length}): ${missing
+                .slice(0, 5)
+                .join(", ")} ${
+                missing.length > 5 ? `... (+${missing.length - 5} más)` : ""
+              }`
             );
           }
         };

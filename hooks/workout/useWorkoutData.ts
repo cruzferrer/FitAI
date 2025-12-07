@@ -8,6 +8,7 @@ import { SetRecord } from "../../components/Exercise/SetRow"; // Importamos el t
 // --- TIPOS DE DATOS (Basados en el JSON de la IA) ---
 interface EjercicioPrescrito {
   nombre: string;
+  exerciseId?: string;
   series: string;
   repeticiones: string;
   carga_notacion: string;

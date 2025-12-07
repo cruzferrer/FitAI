@@ -81,7 +81,11 @@ const TabLayout: React.FC = () => {
         options={{
           title: "Metrics",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={color} />
+            <MaterialCommunityIcons
+              name="chart-timeline-variant"
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
