@@ -323,7 +323,10 @@ Genera el JSON ahora:`;
           `GIF Maps ready: ${gifMapById.size} by ID, ${gifMapByName.size} by name, ${gifMapNormalized.size} normalized`
         );
 
-        const getGifForExercise = (exerciseId: string | null | undefined, name: string | null | undefined) => {
+        const getGifForExercise = (
+          exerciseId: string | null | undefined,
+          name: string | null | undefined
+        ) => {
           if (!name) return null;
 
           // Priority 1: Use exerciseId if available
@@ -341,7 +344,43 @@ Genera el JSON ahora:`;
 
           // Priority 3: Normalized name match
           const norm = normalizeName(name);
-          return gifMapNormalized.get(norm) ?? null;
+          const normalizedMatch = gifMapNormalized.get(norm);
+          if (normalizedMatch) return normalizedMatch;
+
+          // Priority 4: Scored fuzzy match (avoid Smith/machine unless requested)
+          const targetWords = norm.split(/\s+/).filter(Boolean);
+          const penaltyWords = ["smith", "machine"];
+
+          let best: { gif: string; score: number; name: string } | null = null;
+          for (const [catalogName, gifUrl] of gifMapNormalized.entries()) {
+            const catalogWords = catalogName.split(/\s+/).filter(Boolean);
+
+            // Base score: shared words
+            let score = targetWords.filter((w) => catalogWords.includes(w)).length;
+
+            // Bonus for core lift alignment
+            const isBench = norm.includes("bench") && catalogName.includes("bench");
+            const isSquat = norm.includes("squat") && catalogName.includes("squat");
+            const isDeadlift = norm.includes("deadlift") && catalogName.includes("deadlift");
+            const isRow = norm.includes("row") && catalogName.includes("row");
+            if (isBench || isSquat || isDeadlift || isRow) score += 2;
+
+            // Penalty if catalog uses smith/machine but target not
+            const targetMentionsSmith = norm.includes("smith");
+            const catalogHasPenalty = penaltyWords.some((p) => catalogName.includes(p));
+            if (catalogHasPenalty && !targetMentionsSmith) score -= 2;
+
+            if (!best || score > best.score) {
+              best = { gif: gifUrl, score, name: catalogName };
+            }
+          }
+
+          if (best && best.score > 0) {
+            console.log(`🔗 Fuzzy matched (score ${best.score}): "${name}" → "${best.name}"`);
+            return best.gif;
+          }
+
+          return null;
         };
 
         const applyGifUrls = (weeks: any[]) => {
@@ -382,11 +421,17 @@ Genera el JSON ahora:`;
                     ej.gifUrl = gif;
                     matched++;
                     console.log(
-                      `✅ GIF matched: "${ej.nombre}" (ID: ${ej.exerciseId || "N/A"}) → ${gif.substring(0, 50)}...`
+                      `✅ GIF matched: "${ej.nombre}" (ID: ${
+                        ej.exerciseId || "N/A"
+                      }) → ${gif.substring(0, 50)}...`
                     );
                   } else {
                     missing.push(ej.nombre);
-                    console.warn(`❌ GIF NOT found for: "${ej.nombre}" (ID: ${ej.exerciseId || "N/A"})`);
+                    console.warn(
+                      `❌ GIF NOT found for: "${ej.nombre}" (ID: ${
+                        ej.exerciseId || "N/A"
+                      })`
+                    );
                   }
                 });
               });
