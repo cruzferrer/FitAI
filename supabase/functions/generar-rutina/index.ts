@@ -107,11 +107,15 @@ serve(async (req) => {
     console.log("Obteniendo catálogo de ejercicios...");
     const { data: exerciseData, error: dbError } = await supabaseClient
       .from("ejercicios")
-      .select("name, targetMuscles, bodyParts, equipments")
-      .limit(100);
+      .select("name, targetMuscles, bodyParts, equipments, gif_url")
+      .limit(200);
 
     if (dbError)
       throw new Error("Error al obtener ejercicios: " + dbError.message);
+
+    const gifMap = new Map(
+      (exerciseData || []).map((e: any) => [e.name, e.gif_url])
+    );
 
     const exerciseList = JSON.stringify(exerciseData);
     console.log("Creando prompt optimizado...");
@@ -272,6 +276,24 @@ Genera el JSON ahora:`;
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
         const baseWeeks = parsed.rutina_periodizada;
 
+        const applyGifUrls = (weeks: any[]) => {
+          weeks.forEach((w: any) => {
+            if (!w || !Array.isArray(w.dias)) return;
+            w.dias.forEach((d: any) => {
+              if (!d || !Array.isArray(d.grupos)) return;
+              d.grupos.forEach((g: any) => {
+                if (!g || !Array.isArray(g.ejercicios)) return;
+                g.ejercicios.forEach((ej: any) => {
+                  if (ej && !ej.gif_url) {
+                    const gif = gifMap.get(ej.nombre);
+                    if (gif) ej.gif_url = gif;
+                  }
+                });
+              });
+            });
+          });
+        };
+
         // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
         if (baseWeeks[0] && Array.isArray(baseWeeks[0].dias)) {
           const generatedDays = baseWeeks[0].dias.length;
@@ -361,20 +383,20 @@ Genera el JSON ahora:`;
           }
         };
 
-        parsed.rutina_periodizada = parsed.rutina_periodizada.map(
-          (w: any, idx: number) => {
-            const copy = { ...w };
-            if (copy && copy.dias) {
-              if (Array.isArray(copy.dias)) return copy;
-              if (typeof copy.dias === "string") {
-                copy.dias = expandWeekFromBase(copy.dias);
-                return copy;
-              }
+        parsed.rutina_periodizada = parsed.rutina_periodizada.map((w: any) => {
+          const copy = { ...w };
+          if (copy && copy.dias) {
+            if (Array.isArray(copy.dias)) return copy;
+            if (typeof copy.dias === "string") {
+              copy.dias = expandWeekFromBase(copy.dias);
+              return copy;
             }
-            copy.dias = [];
-            return copy;
           }
-        );
+          copy.dias = [];
+          return copy;
+        });
+
+        applyGifUrls(parsed.rutina_periodizada);
 
         const repaired = JSON.stringify(parsed);
         console.log("JSON reparado y listo para devolver.");
