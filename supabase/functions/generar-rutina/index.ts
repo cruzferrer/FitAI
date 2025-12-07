@@ -107,7 +107,7 @@ serve(async (req) => {
     console.log("Obteniendo catálogo de ejercicios...");
     const { data: exerciseData, error: dbError } = await supabaseClient
       .from("ejercicios")
-      .select("name, targetMuscles, bodyParts, equipments, gif_url")
+      .select("name, targetMuscles, bodyParts, equipments, gifUrl, gif_url")
       .limit(200);
 
     if (dbError)
@@ -117,10 +117,10 @@ serve(async (req) => {
       (n ?? "").trim().toLowerCase();
 
     const gifMap = new Map(
-      (exerciseData || []).map((e: any) => [e.name, e.gif_url])
+      (exerciseData || []).map((e: any) => [e.name, e.gifUrl || e.gif_url])
     );
     const gifMapNormalized = new Map(
-      (exerciseData || []).map((e: any) => [normalizeName(e.name), e.gif_url])
+      (exerciseData || []).map((e: any) => [normalizeName(e.name), e.gifUrl || e.gif_url])
     );
 
     const getGifForExercise = (name: string | null | undefined) => {
@@ -304,9 +304,11 @@ Genera el JSON ahora:`;
                     const gif = getGifForExercise(ej.nombre);
                     if (gif) {
                       ej.gif_url = gif;
+                      ej.gifUrl = gif;
                     } else {
                       missing.push(ej.nombre ?? "(sin nombre)");
                       ej.gif_url = null;
+                      ej.gifUrl = null;
                     }
                   }
                 });

@@ -14,6 +14,7 @@ interface EjercicioPrescrito {
   nota?: string;
   descanso?: string;
   gif_url?: string;
+  gifUrl?: string;
 }
 interface GrupoMuscular {
   grupo_muscular: string;

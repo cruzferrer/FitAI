@@ -18,6 +18,7 @@ interface EjercicioPrescrito {
   nota?: string;
   descanso?: string;
   gif_url?: string;
+  gifUrl?: string;
 }
 
 // Lo que el usuario registra

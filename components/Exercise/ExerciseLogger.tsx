@@ -49,9 +49,8 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
     prescribed_carga: ejercicio.carga_notacion,
     prescribed_reps: ejercicio.repeticiones,
     actual_kg: "",
-    actual_metric: "",
-    actual_reps: "",
-    completed: false,
+      const gifValue = ejercicio.gif_url ?? ejercicio.gifUrl;
+      const gifSource = gifValue ? { uri: gifValue } : null;
   }));
 
   const [sets, setSets] = useState<SetRecord[]>(initialSets);
@@ -95,9 +94,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
     router.push("/(tabs)/metrics");
   };
 
-  const gifSource = ejercicio.gif_url
-    ? { uri: ejercicio.gif_url }
-    : null;
+  const gifSource = ejercicio.gif_url ? { uri: ejercicio.gif_url } : null;
 
   return (
     <View style={styles.exerciseBlock}>
@@ -114,7 +111,9 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
           </View>
         )}
         <View style={{ flex: 1 }}>
-          <Text style={styles.groupSubtitle}>{grupoMuscular.toUpperCase()}</Text>
+          <Text style={styles.groupSubtitle}>
+            {grupoMuscular.toUpperCase()}
+          </Text>
           <Text style={styles.exerciseTitle}>{ejercicio.nombre}</Text>
         </View>
       </Pressable>
