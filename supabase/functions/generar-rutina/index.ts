@@ -113,27 +113,6 @@ serve(async (req) => {
     if (dbError)
       throw new Error("Error al obtener ejercicios: " + dbError.message);
 
-    const normalizeName = (n: string | null | undefined) =>
-      (n ?? "").trim().toLowerCase();
-
-    const gifMap = new Map(
-      (exerciseData || []).map((e: any) => [e.name, e.gifUrl || e.gif_url])
-    );
-    const gifMapNormalized = new Map(
-      (exerciseData || []).map((e: any) => [
-        normalizeName(e.name),
-        e.gifUrl || e.gif_url,
-      ])
-    );
-
-    const getGifForExercise = (name: string | null | undefined) => {
-      if (!name) return null;
-      const direct = gifMap.get(name);
-      if (direct) return direct;
-      const norm = normalizeName(name);
-      return gifMapNormalized.get(norm) ?? null;
-    };
-
     const exerciseList = JSON.stringify(exerciseData);
     console.log("Creando prompt optimizado...");
 
@@ -293,9 +272,31 @@ Genera el JSON ahora:`;
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
         const baseWeeks = parsed.rutina_periodizada;
 
+        // ===== GIF MAPPING SETUP =====
+        const normalizeName = (n: string | null | undefined) =>
+          (n ?? "").trim().toLowerCase();
+
+        const gifMap = new Map(
+          (exerciseData || []).map((e: any) => [e.name, e.gifUrl || e.gif_url])
+        );
+        const gifMapNormalized = new Map(
+          (exerciseData || []).map((e: any) => [
+            normalizeName(e.name),
+            e.gifUrl || e.gif_url,
+          ])
+        );
+
         console.log(
           `GIF Map initialized with ${gifMap.size} entries (normalized: ${gifMapNormalized.size})`
         );
+
+        const getGifForExercise = (name: string | null | undefined) => {
+          if (!name) return null;
+          const direct = gifMap.get(name);
+          if (direct) return direct;
+          const norm = normalizeName(name);
+          return gifMapNormalized.get(norm) ?? null;
+        };
 
         const applyGifUrls = (weeks: any[]) => {
           const missing: string[] = [];
@@ -318,7 +319,10 @@ Genera el JSON ahora:`;
                       ej.gifUrl = gif;
                       matched++;
                       console.log(
-                        `✅ GIF matched: "${ej.nombre}" → ${gif.substring(0, 50)}...`
+                        `✅ GIF matched: "${ej.nombre}" → ${gif.substring(
+                          0,
+                          50
+                        )}...`
                       );
                     } else {
                       missing.push(ej.nombre ?? "(sin nombre)");
@@ -336,16 +340,16 @@ Genera el JSON ahora:`;
             console.warn(
               `⚠️ Ejercicios sin GIF (${missing.length}/${total}): ${missing
                 .slice(0, 5)
-                .join(", ")} ${missing.length > 5 ? `... (+${missing.length - 5} más)` : ""}`
+                .join(", ")} ${
+                missing.length > 5 ? `... (+${missing.length - 5} más)` : ""
+              }`
             );
           } else {
             console.log(
               `✅ Todos los ejercicios (${total}) tienen GIF asignado`
             );
           }
-          console.log(
-            `📊 GIF Assignment Summary: ${matched}/${total} matched`
-          );
+          console.log(`📊 GIF Assignment Summary: ${matched}/${total} matched`);
         };
 
         // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
