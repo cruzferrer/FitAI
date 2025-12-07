@@ -47,7 +47,8 @@ const OnboardingExtra: React.FC = () => {
           style={styles.input}
           placeholder="Ej: bench press, deadlift, goblet squat"
           value={preferredExercises ?? ""}
-          onChangeText={(t) => setPreferredExercises(t)}
+          onChangeText={(t) => setPreferredExercises(t || null)}
+          editable={!isLoading}
         />
 
         <Text style={styles.label}>Lesiones o limitaciones (opcional):</Text>
@@ -55,7 +56,8 @@ const OnboardingExtra: React.FC = () => {
           style={styles.input}
           placeholder="Describe si tienes molestias"
           value={injuries ?? ""}
-          onChangeText={(t) => setInjuries(t)}
+          onChangeText={(t) => setInjuries(t || null)}
+          editable={!isLoading}
         />
 
         <Text style={styles.label}>Tiempo por sesión (min):</Text>

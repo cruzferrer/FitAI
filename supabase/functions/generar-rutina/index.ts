@@ -54,9 +54,7 @@ async function searchKnowledge(
     );
   }
 
-  console.log(
-    `Conocimiento RAG encontrado (${data.length} fragmentos).`
-  );
+  console.log(`Conocimiento RAG encontrado (${data.length} fragmentos).`);
   return data.map((d: any) => d.contenido).join("\n---\n");
 }
 
@@ -120,7 +118,8 @@ serve(async (req) => {
 
     // Construir variables sin interpolaciones dentro del template literal
     const generationMode = generation_preference ?? "Generado por IA";
-    const userPreferredExercises = preferred_exercises ?? "Ninguno especificado";
+    const userPreferredExercises =
+      preferred_exercises ?? "Ninguno especificado";
     const userInjuries = injuries ?? "Ninguna";
     const userTimePerSession = time_per_session ?? "No especificado";
     const userComfortPreference = comfort_preference ?? "Priorizar comodidad";
@@ -272,14 +271,18 @@ Genera el JSON ahora:`;
 
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
         const baseWeeks = parsed.rutina_periodizada;
-        
+
         // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
         if (baseWeeks[0] && Array.isArray(baseWeeks[0].dias)) {
           const generatedDays = baseWeeks[0].dias.length;
           if (generatedDays !== available_days) {
-            console.warn(`⚠️ ADVERTENCIA: Se generaron ${generatedDays} días pero el usuario pidió ${available_days}`);
+            console.warn(
+              `⚠️ ADVERTENCIA: Se generaron ${generatedDays} días pero el usuario pidió ${available_days}`
+            );
           } else {
-            console.log(`✅ Validación correcta: ${generatedDays} días generados`);
+            console.log(
+              `✅ Validación correcta: ${generatedDays} días generados`
+            );
           }
         }
 

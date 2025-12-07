@@ -74,7 +74,7 @@ const OnboardingScreen: React.FC = () => {
 
         <PrimaryButton
           title="Más preferencias"
-          onPress={() => router.push("/ (auth)/onboarding_extra")}
+          onPress={() => router.push("/(auth)/onboarding-extra")}
           style={{ marginTop: 16, backgroundColor: COLORS.secondary }}
         />
 
