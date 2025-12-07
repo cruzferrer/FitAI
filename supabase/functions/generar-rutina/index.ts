@@ -305,22 +305,16 @@ Genera el JSON ahora:`;
         const gifMapById = new Map(
           (exerciseData || []).map((e: any) => [e.exerciseId, e.gifUrl])
         );
-        // Also keep name-based maps as fallback
+        // Also keep name-based helpers as fallback
         const normalizeName = (n: string | null | undefined) =>
           (n ?? "").trim().toLowerCase();
 
         const gifMapByName = new Map(
           (exerciseData || []).map((e: any) => [e.name, e.gifUrl])
         );
-        const gifMapNormalized = new Map(
-          (exerciseData || []).map((e: any) => [
-            normalizeName(e.name),
-            e.gifUrl,
-          ])
-        );
 
         console.log(
-          `GIF Maps ready: ${gifMapById.size} by ID, ${gifMapByName.size} by name, ${gifMapNormalized.size} normalized`
+          `GIF Maps ready: ${gifMapById.size} by ID, ${gifMapByName.size} by name`
         );
 
         const getGifForExercise = (
@@ -338,45 +332,53 @@ Genera el JSON ahora:`;
             }
           }
 
-          // Priority 2: Exact name match
-          const directName = gifMapByName.get(name);
-          if (directName) return directName;
-
-          // Priority 3: Normalized name match
+          // Priority 2+: Scored search across catalog (prefers non-incline for flat bench)
           const norm = normalizeName(name);
-          const normalizedMatch = gifMapNormalized.get(norm);
-          if (normalizedMatch) return normalizedMatch;
-
-          // Priority 4: Scored fuzzy match (avoid Smith/machine unless requested)
           const targetWords = norm.split(/\s+/).filter(Boolean);
-          const penaltyWords = ["smith", "machine"];
+          const penaltyWords = ["smith", "machine", "reverse"];
+          const featureWords = [
+            { word: "incline", weight: 3 },
+            { word: "decline", weight: 3 },
+            { word: "close", weight: 1 },
+            { word: "wide", weight: 1 },
+          ];
 
           let best: { gif: string; score: number; name: string } | null = null;
-          for (const [catalogName, gifUrl] of gifMapNormalized.entries()) {
+          for (const ex of exerciseData || []) {
+            const catalogName = normalizeName(ex.name);
             const catalogWords = catalogName.split(/\s+/).filter(Boolean);
 
-            // Base score: shared words
             let score = targetWords.filter((w) => catalogWords.includes(w)).length;
 
-            // Bonus for core lift alignment
+            // Core lift bonus
             const isBench = norm.includes("bench") && catalogName.includes("bench");
             const isSquat = norm.includes("squat") && catalogName.includes("squat");
             const isDeadlift = norm.includes("deadlift") && catalogName.includes("deadlift");
             const isRow = norm.includes("row") && catalogName.includes("row");
             if (isBench || isSquat || isDeadlift || isRow) score += 2;
 
-            // Penalty if catalog uses smith/machine but target not
-            const targetMentionsSmith = norm.includes("smith");
+            // Feature alignment (incline/decline/close/wide)
+            featureWords.forEach(({ word, weight }) => {
+              const targetHas = norm.includes(word);
+              const catalogHas = catalogName.includes(word);
+              if (targetHas && catalogHas) score += weight; // alignment bonus
+              if (!targetHas && catalogHas) score -= weight; // mismatch penalty (e.g., catalog incline but target flat)
+            });
+
+            // Penalty if catalog uses smith/machine/reverse but target not
+            const targetMentionsPenalty = penaltyWords.some((p) => norm.includes(p));
             const catalogHasPenalty = penaltyWords.some((p) => catalogName.includes(p));
-            if (catalogHasPenalty && !targetMentionsSmith) score -= 2;
+            if (catalogHasPenalty && !targetMentionsPenalty) score -= 3;
 
             if (!best || score > best.score) {
-              best = { gif: gifUrl, score, name: catalogName };
+              best = { gif: ex.gifUrl, score, name: ex.name };
             }
           }
 
           if (best && best.score > 0) {
-            console.log(`🔗 Fuzzy matched (score ${best.score}): "${name}" → "${best.name}"`);
+            console.log(
+              `🔗 Fuzzy matched (score ${best.score}): "${name}" → "${best.name}"`
+            );
             return best.gif;
           }
 
