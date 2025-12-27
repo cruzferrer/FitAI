@@ -8,11 +8,14 @@ import { SetRecord } from "../../components/Exercise/SetRow"; // Importamos el t
 // --- TIPOS DE DATOS (Basados en el JSON de la IA) ---
 interface EjercicioPrescrito {
   nombre: string;
+  exerciseId?: string;
   series: string;
   repeticiones: string;
   carga_notacion: string;
   nota?: string;
   descanso?: string;
+  gif_url?: string;
+  gifUrl?: string;
 }
 interface GrupoMuscular {
   grupo_muscular: string;
@@ -53,6 +56,7 @@ export const useWorkoutData = () => {
       prescribed_carga: ejercicio.carga_notacion,
       prescribed_reps: ejercicio.repeticiones,
       actual_kg: "",
+      actual_metric: "",
       actual_reps: "",
       completed: false,
     }));

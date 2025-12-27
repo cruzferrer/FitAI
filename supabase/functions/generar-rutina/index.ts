@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-console.log("Función 'generar-rutina' iniciada (v3 - Reglas Estrictas).");
+console.log("Función 'generar-rutina' iniciada (v4 - Reglas Ultra Estrictas).");
 
 // ----------------------------------------------------
 // 1. CONFIGURACIÓN E INICIALIZACIÓN
@@ -22,7 +22,7 @@ if (!OPENAI_API_KEY) {
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 const EMBEDDING_MODEL = "text-embedding-ada-002";
-const GPT_MODEL = "gpt-4-turbo-preview"; // o 'gpt-3.5-turbo' si el 4 falla
+const GPT_MODEL = "gpt-4-turbo-preview";
 
 // ----------------------------------------------------
 // 2. FUNCIÓN DE BÚSQUEDA (RAG)
@@ -33,14 +33,14 @@ async function searchKnowledge(
   query: string,
   match_count: number = 5
 ) {
-  console.log("Paso 2.A: Generando embedding para RAG...");
+  console.log("Generando embedding para RAG...");
   const embeddingResponse = await openai.embeddings.create({
     model: EMBEDDING_MODEL,
     input: query,
   });
   const userEmbedding = embeddingResponse.data[0].embedding;
 
-  console.log("Paso 2.B: Buscando en pgvector (match_documents)...");
+  console.log("Buscando en pgvector (match_documents)...");
   const { data, error } = await supabaseClient.rpc("match_documents", {
     match_count: match_count,
     query_embedding: userEmbedding,
@@ -54,9 +54,7 @@ async function searchKnowledge(
     );
   }
 
-  console.log(
-    `Paso 2.C: Conocimiento RAG encontrado (${data.length} fragmentos).`
-  );
+  console.log(`Conocimiento RAG encontrado (${data.length} fragmentos).`);
   return data.map((d: any) => d.contenido).join("\n---\n");
 }
 
@@ -66,14 +64,18 @@ async function searchKnowledge(
 
 serve(async (req) => {
   try {
-    console.log("Paso 1: Edge Function invocada.");
-    // --- ACEPTAR LA NUEVA VARIABLE 'user_notation' ---
+    console.log("Edge Function invocada.");
     const {
       user_objective,
       user_experience,
       available_days,
       user_equipment,
       user_notation,
+      generation_preference,
+      preferred_exercises,
+      injuries,
+      time_per_session,
+      comfort_preference,
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -87,87 +89,181 @@ serve(async (req) => {
       knowledgeQuery
     );
 
-    console.log("Paso 3.A: Obteniendo catálogo de ejercicios...");
+    let exercisesKnowledge = "";
+    try {
+      exercisesKnowledge = await searchKnowledge(
+        supabaseClient,
+        "mejores ejercicios tier list prioridad ejercicios Tier S A alternativas cómodas",
+        5
+      );
+    } catch (err) {
+      console.warn(
+        "No se pudo obtener conocimiento específico de 'mejores ejercicios':",
+        err?.message ?? err
+      );
+      exercisesKnowledge = "";
+    }
+
+    console.log("Obteniendo catálogo de ejercicios...");
     const { data: exerciseData, error: dbError } = await supabaseClient
       .from("ejercicios")
-      .select("name, targetMuscles, bodyParts, equipments")
-      .limit(50);
+      .select("exerciseId, name, targetMuscles, bodyParts, equipments, gifUrl")
+      .limit(200);
 
     if (dbError)
       throw new Error("Error al obtener ejercicios: " + dbError.message);
 
-    const exerciseList = JSON.stringify(exerciseData);
-    console.log("Paso 3.B: Creando Super-Prompt...");
-
-    // --- PROMPT MEJORADO CON LAS NUEVAS REGLAS (P1, P2, P3, P4) ---
-    const prompt = `
-            ROL: Eres "FitAI Coach", un experto en periodización.
-            TAREA: Genera un mesociclo de 6 semanas periodizado con progresión semanal.
-
-            **PERFIL DEL USUARIO:**
-            - Objetivo Principal: ${user_objective}
-            - Nivel de Experiencia: ${user_experience}
-            - Días de Entrenamiento: ${available_days}
-            - Equipamiento: ${user_equipment}
-            - Preferencia de Notación: ${user_notation}
-
-            **REGLAS DE GENERACIÓN (OBLIGATORIAS - DEBES CUMPLIRLAS):**
-            1.  **REGLA DE DÍAS (CRÍTICA):** DEBES generar un plan para *exactamente* el número de \`${available_days}\` días. Si \`${available_days}\` es 6, un split PPL (Push/Pull/Legs) x2 es apropiado. Si son 4, un Upper/Lower x2 es apropiado. Si son 5, un split PPL + Upper/Lower es apropiado.
-            2.  **REGLA DE VOLUMEN (SERIES):** Tus "series" en el JSON deben ser realistas para un solo ejercicio (ej. 3-5 series). NO generes solo 1 serie por ejercicio. El volumen total (ej. 10-20 series) se refiere a *SERIES POR SEMANA* por grupo muscular.
-            3.  **REGLA DE REPETICIONES:** Basa las repeticiones en el objetivo. Hipertrofia (6-15 reps), Fuerza (1-5 reps). NO uses 20-25 reps para hipertrofia a menos que sea un aislamiento específico.
-            4.  **REGLA DE NOTACIÓN:** Basa la "carga_notacion" en la preferencia del usuario.
-                - Si la preferencia es 'RPE / RIR (Moderno)', usa notación RPE o RIR (ej. "RPE 8" o "RIR 2").
-                - Si la preferencia es 'Tradicional (Al Fallo)', describe la intensidad (ej. "Peso pesado", "Peso moderado", o "Al fallo").
-            
-            5.  **REGLA DE VARIEDAD DE EJERCICIOS (¡NUEVA!):** Para cada grupo muscular principal (ej. "Pecho", "Espalda", "Piernas") en un día, DEBES incluir al menos dos (2) ejercicios diferentes del catálogo. Por ejemplo, para "Pecho", puedes incluir "Press Banca" (compuesto) y "Aperturas en Peck Deck" (aislamiento). No incluyas solo un ejercicio por grupo muscular.
-
-            **PRINCIPIOS CIENTÍFICOS (DEBES SEGUIR ESTO ESTRICTAMENTE):**
-            ${scientificKnowledge}
-
-            **CATÁLOGO DE EJERCICIOS PERMITIDOS:**
-            - Utiliza ejercicios SOLAMENTE de esta lista JSON: ${exerciseList}
-
-            **FORMATO DE SALIDA OBLIGATORIO (JSON - MUY IMPORTANTE):**
-            Tu respuesta debe ser SOLAMENTE un objeto JSON válido.
-            La clave raíz DEBE ser "rutina_periodizada".
-            "rutina_periodizada" DEBE ser un ARRAY de objetos de Semana, UNO POR CADA SEMANA DEL MESOCICLO.
-            CADA objeto de Semana (de 1 a 6) DEBE contener un array de "dias" que detalle los ejercicios para esa semana.
-            NO mezcles estructuras; no pongas "ajustes" en lugar de "dias" en las semanas 2-6. Genera el plan completo.
-
-            {
-              "rutina_periodizada": [
-                {
-                  "semana": 1,
-                  "fase": "Acumulación - Volumen Base",
-                  "dias": [
-                    {
-                      "dia_entrenamiento": "Día 1 - Push (Pecho/Hombro/Tríceps)",
-                      "grupos": [
-                        {
-                          "grupo_muscular": "Pecho (Básico)",
-                          "ejercicios": [
-                            {
-                              "nombre": "Press Banca",
-                              "series": "4",
-                              "repeticiones": "8-10",
-                              "carga_notacion": "RPE 7",
-                              "nota": "..."
-                            }
-                  _       ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-      _       }
-        `; // <-- FIN DEL PROMPT
-
     console.log(
-      "Paso 4: Llamando a la API de OpenAI (chat.completions.create)..."
+      `📦 Loaded ${exerciseData?.length || 0} exercises from catalog`
     );
+    if (exerciseData && exerciseData.length > 0) {
+      console.log(
+        `Sample exercise names: ${exerciseData
+          .slice(0, 5)
+          .map((e: any) => e.name)
+          .join(" | ")}`
+      );
+    }
 
-    // Use a deterministic generation and a system message that enforces strict JSON-only output
+    const exerciseList = JSON.stringify(exerciseData);
+    console.log("Creando prompt optimizado...");
+
+    // Construir variables sin interpolaciones dentro del template literal
+    const generationMode = generation_preference ?? "Generado por IA";
+    const userPreferredExercises =
+      preferred_exercises ?? "Ninguno especificado";
+    const userInjuries = injuries ?? "Ninguna";
+    const userTimePerSession = time_per_session ?? "No especificado";
+    const userComfortPreference = comfort_preference ?? "Priorizar comodidad";
+
+    const prompt = `Eres "FitAI Coach", un experto en periodización deportiva y ciencias del ejercicio.
+
+Tu tarea es generar un mesociclo de 6 semanas con progresión semanal para el siguiente perfil:
+
+═══════════════════════════════════════════════════════════════════
+PERFIL DEL USUARIO
+═══════════════════════════════════════════════════════════════════
+• Objetivo: ${user_objective}
+• Experiencia: ${user_experience}
+• Días disponibles: ${available_days} días por semana
+• Equipamiento: ${user_equipment}
+• Notación preferida: ${user_notation}
+• Preferencia de generación: ${generationMode}
+• Ejercicios preferidos: ${userPreferredExercises}
+• Lesiones/limitaciones: ${userInjuries}
+• Tiempo por sesión: ${userTimePerSession} minutos
+• Preferencia de comodidad: ${userComfortPreference}
+
+═══════════════════════════════════════════════════════════════════
+REGLAS CRÍTICAS (OBLIGATORIO CUMPLIR AL 100%)
+═══════════════════════════════════════════════════════════════════
+
+🔴 REGLA #1 - DÍAS EXACTOS (LA MÁS IMPORTANTE):
+El array "dias" de la Semana 1 DEBE contener EXACTAMENTE ${available_days} elementos.
+• Si ${available_days} = 2 → genera 2 días (ej: Full Body A, Full Body B)
+• Si ${available_days} = 3 → genera 3 días (ej: Push, Pull, Legs)
+• Si ${available_days} = 4 → genera 4 días (ej: Upper, Lower, Upper, Lower)
+• Si ${available_days} = 5 → genera 5 días (ej: Push, Pull, Legs, Upper, Lower)
+• Si ${available_days} = 6 → genera 6 días (ej: Push, Pull, Legs, Push, Pull, Legs)
+
+NO generes 3 días si el usuario pidió 6. NO generes 4 si pidió 5. EXACTAMENTE ${available_days} elementos.
+
+🔴 REGLA #2 - EJERCICIOS TIER S/A PRIORITARIOS:
+Usa SIEMPRE estos ejercicios como base (están en Tier S/A científicamente):
+• Pecho: Bench Press (Barbell), Dumbbell Chest Press, Incline Bench Press
+• Espalda: Barbell Row, Pull-ups, Lat Pulldown, Seated Cable Row
+• Piernas: Barbell Squat, Romanian Deadlift, Bulgarian Split Squat, Leg Press
+• Hombros: Overhead Press (Barbell o Dumbbell), Lateral Raises
+• Brazos: Barbell Curl, Triceps Dips, Rope Pushdowns
+
+Si el usuario tiene lesiones o pide "comodidad", usa alternativas con máquinas (ej: Chest Press Machine en lugar de Bench Press).
+
+🔴 REGLA #3 - VOLUMEN REALISTA:
+• Hipertrofia: 3-5 series por ejercicio, 8-15 repeticiones
+• Fuerza: 3-6 series por ejercicio, 3-6 repeticiones
+• Mixto: 3-5 series, 6-12 repeticiones
+• Total por grupo muscular: 10-20 series SEMANALES (suma de todos los ejercicios)
+
+🔴 REGLA #4 - NOTACIÓN CORRECTA:
+• Si user_notation = "RPE / RIR (Moderno)" → usa "RPE 7", "RPE 8", "RIR 2", etc.
+• Si user_notation = "Tradicional (Al Fallo)" → usa "Peso moderado", "Peso pesado", "Al fallo"
+
+🔴 REGLA #5 - VARIEDAD EN CADA DÍA:
+Cada día debe tener 2-3 ejercicios por grupo muscular grande (pecho, espalda, piernas).
+Ejemplo Día Push: Press Banca (compuesto) + Incline Dumbbell Press (compuesto) + Cable Flyes (aislamiento).
+
+🔴 REGLA #6 - USAR SOLO EJERCICIOS DEL CATÁLOGO CON SU ID:
+**CRÍTICO**: Para CADA ejercicio que incluyas, DEBES:
+1. Encontrarlo en el catálogo JSON que viene abajo
+2. Usar su NOMBRE EXACTO como aparece en el catálogo
+3. INCLUIR su "exerciseId" en tu respuesta JSON
+4. Si un ejercicio ideal no existe exactamente, busca el más similar y usa ESE ejerciseId.
+Ejemplo: Si quieres "Bench Press Barbell", usa {"nombre": "Bench Press (Barbell)", "exerciseId": "<el ID del catálogo>", ...}
+
+═══════════════════════════════════════════════════════════════════
+CONOCIMIENTO CIENTÍFICO (APLICAR ESTOS PRINCIPIOS)
+═══════════════════════════════════════════════════════════════════
+${scientificKnowledge}
+
+═══════════════════════════════════════════════════════════════════
+TIER LIST DE MEJORES EJERCICIOS (USAR ESTOS PRIMERO)
+═══════════════════════════════════════════════════════════════════
+${exercisesKnowledge}
+
+═══════════════════════════════════════════════════════════════════
+CATÁLOGO DE EJERCICIOS DISPONIBLES
+═══════════════════════════════════════════════════════════════════
+${exerciseList}
+
+═══════════════════════════════════════════════════════════════════
+FORMATO DE SALIDA (JSON ESTRICTO)
+═══════════════════════════════════════════════════════════════════
+Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura:
+
+{
+  "rutina_periodizada": [
+    {
+      "semana": 1,
+      "fase": "Acumulación - Volumen Base",
+      "dias": [
+        {
+          "dia_entrenamiento": "Día 1 - Push (Pecho/Hombro/Tríceps)",
+          "grupos": [
+            {
+              "grupo_muscular": "Pecho (Compuesto)",
+              "ejercicios": [
+                {
+                  "nombre": "Bench Press (Barbell)",
+                  "exerciseId": "EjXYZ123",
+                  "series": "4",
+                  "repeticiones": "8-10",
+                  "carga_notacion": "RPE 7",
+                  "nota": "Ejercicio base de empuje"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "semana": 2,
+      "fase": "Intensificación - RPE 8",
+      "dias": "Mismo patrón que Semana 1, incrementar RPE a 8"
+    }
+  ]
+}
+
+✅ VALIDACIÓN FINAL ANTES DE RESPONDER:
+1. ¿El array "dias" de Semana 1 tiene EXACTAMENTE ${available_days} elementos? Si no, CORRIGE.
+2. ¿Usaste ejercicios Tier S/A como Bench Press, Squat, Barbell Row? Si no, CORRIGE.
+3. ¿Las series son 3-5 por ejercicio? Si no, CORRIGE.
+4. ¿La notación es ${user_notation}? Si no, CORRIGE.
+
+Genera el JSON ahora:`;
+
+    console.log("Llamando a la API de OpenAI...");
+
     const response = await openai.chat.completions.create({
       model: GPT_MODEL,
       messages: [
@@ -182,20 +278,207 @@ serve(async (req) => {
       response_format: { type: "json_object" },
     });
 
-    console.log(
-      "Paso 5: Respuesta de OpenAI recibida. Validando y reparando JSON si es necesario."
-    );
+    console.log("Respuesta de OpenAI recibida. Validando JSON...");
     const jsonOutput = response.choices[0].message.content;
 
-    // Intentamos parsear la salida y asegurar que todas las semanas tengan `dias` como array.
     try {
       if (!jsonOutput || typeof jsonOutput !== "string") {
         throw new Error("La respuesta de OpenAI no es un string JSON válido.");
       }
       const parsed = JSON.parse(jsonOutput);
+      console.log("✅ JSON parsed successfully, checking structure...");
+      console.log(`Structure keys: ${Object.keys(parsed).join(", ")}`);
+      console.log(
+        `Has rutina_periodizada: ${!!parsed.rutina_periodizada}, is array: ${Array.isArray(
+          parsed.rutina_periodizada
+        )}`
+      );
 
       if (parsed && Array.isArray(parsed.rutina_periodizada)) {
+        console.log(
+          `✅ Routine structure valid, ${parsed.rutina_periodizada.length} weeks`
+        );
         const baseWeeks = parsed.rutina_periodizada;
+
+        // ===== GIF MAPPING SETUP =====
+        // Create a map from exerciseId to gifUrl
+        const gifMapById = new Map(
+          (exerciseData || []).map((e: any) => [e.exerciseId, e.gifUrl])
+        );
+        // Also keep name-based helpers as fallback
+        const normalizeName = (n: string | null | undefined) =>
+          (n ?? "").trim().toLowerCase();
+
+        const gifMapByName = new Map(
+          (exerciseData || []).map((e: any) => [e.name, e.gifUrl])
+        );
+
+        console.log(
+          `GIF Maps ready: ${gifMapById.size} by ID, ${gifMapByName.size} by name`
+        );
+
+        const getGifForExercise = (
+          exerciseId: string | null | undefined,
+          name: string | null | undefined
+        ) => {
+          if (!name) return null;
+
+          // Priority 1: Use exerciseId if available
+          if (exerciseId) {
+            const gifById = gifMapById.get(exerciseId);
+            if (gifById) {
+              console.log(`✅ GIF found by ID: "${exerciseId}"`);
+              return gifById;
+            }
+          }
+
+          // Priority 2+: Scored search across catalog (prefers non-incline for flat bench)
+          const norm = normalizeName(name);
+          const targetWords = norm.split(/\s+/).filter(Boolean);
+          const penaltyWords = ["smith", "machine", "reverse"];
+          const featureWords = [
+            { word: "incline", weight: 3 },
+            { word: "decline", weight: 3 },
+            { word: "close", weight: 1 },
+            { word: "wide", weight: 1 },
+          ];
+
+          let best: { gif: string; score: number; name: string } | null = null;
+          for (const ex of exerciseData || []) {
+            const catalogName = normalizeName(ex.name);
+            const catalogWords = catalogName.split(/\s+/).filter(Boolean);
+
+            let score = targetWords.filter((w) =>
+              catalogWords.includes(w)
+            ).length;
+
+            // Core lift bonus
+            const isBench =
+              norm.includes("bench") && catalogName.includes("bench");
+            const isSquat =
+              norm.includes("squat") && catalogName.includes("squat");
+            const isDeadlift =
+              norm.includes("deadlift") && catalogName.includes("deadlift");
+            const isRow = norm.includes("row") && catalogName.includes("row");
+            if (isBench || isSquat || isDeadlift || isRow) score += 2;
+
+            // Feature alignment (incline/decline/close/wide)
+            featureWords.forEach(({ word, weight }) => {
+              const targetHas = norm.includes(word);
+              const catalogHas = catalogName.includes(word);
+              if (targetHas && catalogHas) score += weight; // alignment bonus
+              if (!targetHas && catalogHas) score -= weight; // mismatch penalty (e.g., catalog incline but target flat)
+            });
+
+            // Penalty if catalog uses smith/machine/reverse but target not
+            const targetMentionsPenalty = penaltyWords.some((p) =>
+              norm.includes(p)
+            );
+            const catalogHasPenalty = penaltyWords.some((p) =>
+              catalogName.includes(p)
+            );
+            if (catalogHasPenalty && !targetMentionsPenalty) score -= 3;
+
+            if (!best || score > best.score) {
+              best = { gif: ex.gifUrl, score, name: ex.name };
+            }
+          }
+
+          if (best && best.score > 0) {
+            console.log(
+              `🔗 Fuzzy matched (score ${best.score}): "${name}" → "${best.name}"`
+            );
+            return best.gif;
+          }
+
+          return null;
+        };
+
+        const applyGifUrls = (weeks: any[]) => {
+          const missing: string[] = [];
+          let alreadyHad = 0;
+          let matched = 0;
+          let total = 0;
+
+          weeks.forEach((w: any) => {
+            if (!w || !Array.isArray(w.dias)) return;
+            w.dias.forEach((d: any) => {
+              if (!d || !Array.isArray(d.grupos)) return;
+              d.grupos.forEach((g: any) => {
+                if (!g || !Array.isArray(g.ejercicios)) return;
+                g.ejercicios.forEach((ej: any) => {
+                  if (!ej || !ej.nombre) return;
+                  total++;
+
+                  // Check if exercise already has gifUrl embedded
+                  const existingGif = ej.gifUrl || (ej as any).gif_url;
+                  if (
+                    existingGif &&
+                    typeof existingGif === "string" &&
+                    existingGif.trim()
+                  ) {
+                    alreadyHad++;
+                    // Normalize to gif_url property
+                    ej.gif_url = existingGif;
+                    ej.gifUrl = existingGif;
+                    console.log(`📦 Already embedded: "${ej.nombre}"`);
+                    return;
+                  }
+
+                  // Try to find GIF in catalog (by ID first, then by name)
+                  const gif = getGifForExercise(ej.exerciseId, ej.nombre);
+                  if (gif) {
+                    ej.gif_url = gif;
+                    ej.gifUrl = gif;
+                    matched++;
+                    console.log(
+                      `✅ GIF matched: "${ej.nombre}" (ID: ${
+                        ej.exerciseId || "N/A"
+                      }) → ${gif.substring(0, 50)}...`
+                    );
+                  } else {
+                    missing.push(ej.nombre);
+                    console.warn(
+                      `❌ GIF NOT found for: "${ej.nombre}" (ID: ${
+                        ej.exerciseId || "N/A"
+                      })`
+                    );
+                  }
+                });
+              });
+            });
+          });
+
+          console.log(
+            `📊 GIF Summary: ${alreadyHad} embedded + ${matched} from catalog = ${
+              alreadyHad + matched
+            }/${total} total`
+          );
+          if (missing.length > 0) {
+            console.warn(
+              `⚠️ Missing GIFs (${missing.length}): ${missing
+                .slice(0, 5)
+                .join(", ")} ${
+                missing.length > 5 ? `... (+${missing.length - 5} más)` : ""
+              }`
+            );
+          }
+        };
+
+        // VALIDACIÓN POST-GENERACIÓN: verificar que Semana 1 tenga el número correcto de días
+        if (baseWeeks[0] && Array.isArray(baseWeeks[0].dias)) {
+          const generatedDays = baseWeeks[0].dias.length;
+          if (generatedDays !== available_days) {
+            console.warn(
+              `⚠️ ADVERTENCIA: Se generaron ${generatedDays} días pero el usuario pidió ${available_days}`
+            );
+          } else {
+            console.log(
+              `✅ Validación correcta: ${generatedDays} días generados`
+            );
+          }
+        }
+
         const baseWeek0Dias = Array.isArray(baseWeeks[0]?.dias)
           ? baseWeeks[0].dias
           : [];
@@ -208,7 +491,6 @@ serve(async (req) => {
               JSON.parse(JSON.stringify(d))
             );
 
-            // Detect RPE change
             let targetRPE: string | null = null;
             if (description.includes("rpe 9") || description.includes("rpe9"))
               targetRPE = "RPE 9";
@@ -272,23 +554,25 @@ serve(async (req) => {
           }
         };
 
-        parsed.rutina_periodizada = parsed.rutina_periodizada.map(
-          (w: any, idx: number) => {
-            const copy = { ...w };
-            if (copy && copy.dias) {
-              if (Array.isArray(copy.dias)) return copy;
-              if (typeof copy.dias === "string") {
-                copy.dias = expandWeekFromBase(copy.dias);
-                return copy;
-              }
+        parsed.rutina_periodizada = parsed.rutina_periodizada.map((w: any) => {
+          const copy = { ...w };
+          if (copy && copy.dias) {
+            if (Array.isArray(copy.dias)) return copy;
+            if (typeof copy.dias === "string") {
+              copy.dias = expandWeekFromBase(copy.dias);
+              return copy;
             }
-            copy.dias = [];
-            return copy;
           }
-        );
+          copy.dias = [];
+          return copy;
+        });
+
+        console.log("🎬 About to call applyGifUrls...");
+        applyGifUrls(parsed.rutina_periodizada);
+        console.log("✅ applyGifUrls completed");
 
         const repaired = JSON.stringify(parsed);
-        console.log("Paso 5.B: JSON reparado y listo para devolver.");
+        console.log("JSON reparado y listo para devolver.");
         return new Response(repaired, {
           headers: { "Content-Type": "application/json" },
           status: 200,
@@ -296,10 +580,8 @@ serve(async (req) => {
       }
     } catch (e: any) {
       console.warn("No se pudo parsear la salida de OpenAI o repararla:", e);
-      // Caerá a devolver el output original abajo
     }
 
-    // Si no pudimos parsear o no había rutina_periodizada, devolvemos el contenido original
     return new Response(
       jsonOutput ?? JSON.stringify({ error: "Respuesta vacía de OpenAI" }),
       {
@@ -314,4 +596,4 @@ serve(async (req) => {
       status: 500,
     });
   }
-}); // <-- CORRECCIÓN: ESTA ES LA LÍNEA FINAL. EL PARÉNTESIS EXTRA (`)`) SE HA ELIMINADO.
+});

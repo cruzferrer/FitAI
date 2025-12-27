@@ -74,6 +74,7 @@ const TabLayout: React.FC = () => {
           ),
         }}
       />
+
     </Tabs>
   );
 };

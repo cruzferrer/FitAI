@@ -7,6 +7,8 @@ export const useRegister = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [fullName, setFullName] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
@@ -14,8 +16,8 @@ export const useRegister = () => {
 
   const handleRegister = async () => {
     // 1. Validaciones del formulario
-    if (!email || !password || !confirmPassword) {
-      Alert.alert("Error", "Por favor, completa todos los campos.");
+    if (!email || !password || !confirmPassword || !username) {
+      Alert.alert("Error", "Por favor, completa todos los campos obligatorios.");
       return;
     }
     if (password !== confirmPassword) {
@@ -26,7 +28,10 @@ export const useRegister = () => {
     setIsLoading(true);
 
     // 2. Llamada a la API (manejada por useAuth)
-    const { error } = await signUp(email, password);
+    const { error } = await signUp(email, password, {
+      full_name: fullName,
+      username: username,
+    });
 
     setIsLoading(false);
 
@@ -50,6 +55,10 @@ export const useRegister = () => {
     setPassword,
     confirmPassword,
     setConfirmPassword,
+    fullName,
+    setFullName,
+    username,
+    setUsername,
     isLoading,
     handleRegister,
   };

@@ -11,3 +11,9 @@ entrypoint = "./functions/chatbot-query/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/chatbot-query/*.html" ]
+
+[functions.generar-rutina]
+enabled = true
+verify_jwt = false
+import_map = "./functions/generar-rutina/deno.json"
+entrypoint = "./functions/generar-rutina/index.ts"

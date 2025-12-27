@@ -14,21 +14,31 @@ import * as Haptics from "expo-haptics";
 export interface SetRecord {
   prescribed_carga: string;
   prescribed_reps: string;
-  actual_kg: string;
-  actual_reps: string;
+  actual_kg: string; // Peso registrado
+  actual_reps: string; // Reps registradas
+  actual_metric?: string; // RPE o RIR registrados
   completed: boolean;
 }
 
 interface SetRowProps {
   set: SetRecord;
   setIndex: number;
+  metricLabel: "RPE" | "RIR";
   onUpdateSet: (index: number, updatedSet: SetRecord) => void;
 }
 
-const SetRow: React.FC<SetRowProps> = ({ set, setIndex, onUpdateSet }) => {
+const SetRow: React.FC<SetRowProps> = ({
+  set,
+  setIndex,
+  metricLabel,
+  onUpdateSet,
+}) => {
   const isCompleted = set.completed;
 
-  const handleChange = (key: "actual_kg" | "actual_reps", value: string) => {
+  const handleChange = (
+    key: "actual_kg" | "actual_reps" | "actual_metric",
+    value: string
+  ) => {
     onUpdateSet(setIndex, { ...set, [key]: value, completed: false });
   };
 
@@ -38,19 +48,21 @@ const SetRow: React.FC<SetRowProps> = ({ set, setIndex, onUpdateSet }) => {
 
     let newKg = set.actual_kg;
     let newReps = set.actual_reps;
+    let newMetric = set.actual_metric;
 
     // Autocompletar si está vacío
-    if (newCompletedState && !newKg) {
-      newKg = set.prescribed_carga;
-    }
     if (newCompletedState && !newReps) {
       newReps = set.prescribed_reps.split(/[^0-9]/)[0] || set.prescribed_reps;
+    }
+    if (newCompletedState && !newMetric && set.prescribed_carga) {
+      newMetric = set.prescribed_carga;
     }
 
     onUpdateSet(setIndex, {
       ...set,
       completed: newCompletedState,
       actual_kg: newKg,
+      actual_metric: newMetric,
       actual_reps: newReps,
     });
   };
@@ -65,11 +77,23 @@ const SetRow: React.FC<SetRowProps> = ({ set, setIndex, onUpdateSet }) => {
         </Text>
       </View>
 
-      <View style={[setStyles.col, { flex: 0.9 }]}>
+      <View style={[setStyles.col, { flex: 0.8 }]}>
         <TextInput
           style={[setStyles.input, isCompleted && setStyles.inputCompleted]}
           keyboardType="numeric"
-          placeholder={set.prescribed_carga.includes("RPE") ? "RPE" : "Kg"}
+          placeholder={metricLabel}
+          placeholderTextColor={COLORS.secondaryText}
+          value={set.actual_metric || ""}
+          onChangeText={(value) => handleChange("actual_metric", value)}
+          editable={!isCompleted}
+        />
+      </View>
+
+      <View style={[setStyles.col, { flex: 0.8 }]}>
+        <TextInput
+          style={[setStyles.input, isCompleted && setStyles.inputCompleted]}
+          keyboardType="numeric"
+          placeholder="Kg"
           placeholderTextColor={COLORS.secondaryText}
           value={set.actual_kg}
           onChangeText={(value) => handleChange("actual_kg", value)}

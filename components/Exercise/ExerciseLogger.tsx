@@ -5,10 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Image,
+  Pressable,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import SetRow, { SetRecord } from "./SetRow"; // Importamos el SetRow
+import { useRouter } from "expo-router";
 
 // Tipos de datos que recibe este componente
 interface EjercicioPrescrito {
@@ -18,6 +21,7 @@ interface EjercicioPrescrito {
   carga_notacion: string;
   nota?: string;
   descanso?: string;
+  gif_url?: string;
 }
 
 interface ExerciseLoggerProps {
@@ -31,6 +35,13 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   grupoMuscular,
   onLogUpdate,
 }) => {
+  const router = useRouter();
+  const metricLabel: "RPE" | "RIR" = ejercicio.carga_notacion
+    ?.toUpperCase()
+    .includes("RPE")
+    ? "RPE"
+    : "RIR";
+
   // Inicializa el estado de las series con los datos prescritos por la IA
   const initialSets: SetRecord[] = Array.from({
     length: parseInt(ejercicio.series, 10) || 0,
@@ -38,6 +49,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
     prescribed_carga: ejercicio.carga_notacion,
     prescribed_reps: ejercicio.repeticiones,
     actual_kg: "",
+    actual_metric: "",
     actual_reps: "",
     completed: false,
   }));
@@ -63,6 +75,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
       prescribed_carga: sets[0]?.prescribed_carga || "RPE 7",
       prescribed_reps: sets[0]?.prescribed_reps || "8-10",
       actual_kg: "",
+      actual_metric: "",
       actual_reps: "",
       completed: false,
     };
@@ -78,10 +91,40 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
         : `Descanso: ${ejercicio.descanso}`
       : "Añadir notas aquí...";
 
+  const openMetrics = () => {
+    router.push({
+      pathname: "/workout/exercise-metrics",
+      params: {
+        id: ejercicio.nombre, // Using name as ID for now since ID isn't explicit in the interface
+        name: ejercicio.nombre,
+        gifUrl: ejercicio.gif_url,
+      },
+    });
+  };
+  const gifValue = ejercicio.gif_url ?? (ejercicio as any).gifUrl;
+  const gifSource = gifValue ? { uri: gifValue } : null;
+
   return (
     <View style={styles.exerciseBlock}>
-      <Text style={styles.groupSubtitle}>{grupoMuscular.toUpperCase()}</Text>
-      <Text style={styles.exerciseTitle}>{ejercicio.nombre}</Text>
+      <Pressable style={styles.headerRowInfo} onPress={openMetrics}>
+        {gifSource ? (
+          <Image source={gifSource} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <MaterialCommunityIcons
+              name="play-circle-outline"
+              size={20}
+              color={COLORS.secondaryText}
+            />
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.groupSubtitle}>
+            {grupoMuscular.toUpperCase()}
+          </Text>
+          <Text style={styles.exerciseTitle}>{ejercicio.nombre}</Text>
+        </View>
+      </Pressable>
 
       {/* Caja de notas del usuario (Permite editar) */}
       <View style={styles.notesContainer}>
@@ -99,7 +142,8 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
       <View style={styles.headerRow}>
         <Text style={styles.headerText}>SET</Text>
         <Text style={styles.headerText}>PRESC.</Text>
-        <Text style={styles.headerText}>KG/RPE</Text>
+        <Text style={styles.headerText}>{metricLabel}</Text>
+        <Text style={styles.headerText}>KG</Text>
         <Text style={styles.headerText}>REPS</Text>
         <View style={{ width: 30 }} />
       </View>
@@ -110,6 +154,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
           key={setIndex}
           set={set}
           setIndex={setIndex}
+          metricLabel={metricLabel}
           onUpdateSet={handleUpdateSet}
         />
       ))}
@@ -144,8 +189,26 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: COLORS.primaryText,
-    marginBottom: 5,
+    marginBottom: 2,
     textTransform: "capitalize",
+  },
+  headerRowInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 10,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.inputBackground,
+    borderWidth: 1,
+    borderColor: COLORS.separator,
+  },
+  avatarPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   notesContainer: {
     marginBottom: 15,
