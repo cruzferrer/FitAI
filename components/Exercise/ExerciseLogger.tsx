@@ -92,7 +92,14 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
       : "Añadir notas aquí...";
 
   const openMetrics = () => {
-    router.push("/(tabs)/metrics");
+    router.push({
+      pathname: "/workout/exercise-metrics",
+      params: {
+        id: ejercicio.nombre, // Using name as ID for now since ID isn't explicit in the interface
+        name: ejercicio.nombre,
+        gifUrl: ejercicio.gif_url,
+      },
+    });
   };
   const gifValue = ejercicio.gif_url ?? (ejercicio as any).gifUrl;
   const gifSource = gifValue ? { uri: gifValue } : null;

@@ -348,12 +348,17 @@ Genera el JSON ahora:`;
             const catalogName = normalizeName(ex.name);
             const catalogWords = catalogName.split(/\s+/).filter(Boolean);
 
-            let score = targetWords.filter((w) => catalogWords.includes(w)).length;
+            let score = targetWords.filter((w) =>
+              catalogWords.includes(w)
+            ).length;
 
             // Core lift bonus
-            const isBench = norm.includes("bench") && catalogName.includes("bench");
-            const isSquat = norm.includes("squat") && catalogName.includes("squat");
-            const isDeadlift = norm.includes("deadlift") && catalogName.includes("deadlift");
+            const isBench =
+              norm.includes("bench") && catalogName.includes("bench");
+            const isSquat =
+              norm.includes("squat") && catalogName.includes("squat");
+            const isDeadlift =
+              norm.includes("deadlift") && catalogName.includes("deadlift");
             const isRow = norm.includes("row") && catalogName.includes("row");
             if (isBench || isSquat || isDeadlift || isRow) score += 2;
 
@@ -366,8 +371,12 @@ Genera el JSON ahora:`;
             });
 
             // Penalty if catalog uses smith/machine/reverse but target not
-            const targetMentionsPenalty = penaltyWords.some((p) => norm.includes(p));
-            const catalogHasPenalty = penaltyWords.some((p) => catalogName.includes(p));
+            const targetMentionsPenalty = penaltyWords.some((p) =>
+              norm.includes(p)
+            );
+            const catalogHasPenalty = penaltyWords.some((p) =>
+              catalogName.includes(p)
+            );
             if (catalogHasPenalty && !targetMentionsPenalty) score -= 3;
 
             if (!best || score > best.score) {

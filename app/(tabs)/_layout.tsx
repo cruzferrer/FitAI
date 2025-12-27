@@ -75,20 +75,6 @@ const TabLayout: React.FC = () => {
         }}
       />
 
-      {/* Pestaña Metrics */}
-      <Tabs.Screen
-        name="metrics"
-        options={{
-          title: "Metrics",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="chart-timeline-variant"
-              size={24}
-              color={color}
-            />
-          ),
-        }}
-      />
     </Tabs>
   );
 };
