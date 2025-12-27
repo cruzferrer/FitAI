@@ -14,7 +14,11 @@ interface AuthContextType {
   profileComplete: boolean;
   // Haremos que las funciones devuelvan el error si existe
   signIn: (email: string, pass: string) => Promise<{ error: any }>;
-  signUp: (email: string, pass: string) => Promise<{ error: any }>;
+  signUp: (
+    email: string,
+    pass: string,
+    userData?: { full_name: string; username: string }
+  ) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -107,12 +111,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    userData?: { full_name: string; username: string }
+  ) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: userData, // Metadata for the trigger
+      },
     });
-    // Aquí puedes manejar la creación de un 'perfil' si lo deseas
     return { error };
   };
 

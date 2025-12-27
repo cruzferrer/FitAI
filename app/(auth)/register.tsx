@@ -1,10 +1,12 @@
-import React from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -23,66 +25,93 @@ const RegisterScreen: React.FC = () => {
     setPassword,
     confirmPassword,
     setConfirmPassword,
+    fullName,
+    setFullName,
+    username,
+    setUsername,
     isLoading,
     handleRegister,
   } = useRegister();
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Crear Cuenta</Text>
-        <Text style={styles.subtitle}>
-          Comienza tu entrenamiento inteligente con FitAI
-        </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Crear Cuenta</Text>
+            <Text style={styles.subtitle}>
+              Comienza tu entrenamiento inteligente con FitAI
+            </Text>
 
-        <View style={styles.inputGroup}>
-          <TextInput
-            style={styles.input}
-            placeholder="Correo electrónico"
-            placeholderTextColor={COLORS.secondaryText}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Contraseña"
-            placeholderTextColor={COLORS.secondaryText}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Confirmar Contraseña"
-            placeholderTextColor={COLORS.secondaryText}
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre Completo (Opcional)"
+                placeholderTextColor={COLORS.secondaryText}
+                value={fullName}
+                onChangeText={setFullName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre de Usuario"
+                placeholderTextColor={COLORS.secondaryText}
+                autoCapitalize="none"
+                value={username}
+                onChangeText={setUsername}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Correo electrónico"
+                placeholderTextColor={COLORS.secondaryText}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                placeholderTextColor={COLORS.secondaryText}
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirmar Contraseña"
+                placeholderTextColor={COLORS.secondaryText}
+                secureTextEntry
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
 
-          <PrimaryButton
-            title="Registrarse"
-            onPress={handleRegister}
-            isLoading={isLoading}
-            style={{ marginTop: 10 }}
-          />
+              <PrimaryButton
+                title="Registrarse"
+                onPress={handleRegister}
+                isLoading={isLoading}
+                style={{ marginTop: 10 }}
+              />
 
-          <TouchableOpacity
-            style={styles.backLink}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.linkText}>← Volver a Iniciar Sesión</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+              <TouchableOpacity
+                style={styles.backLink}
+                onPress={() => router.back()}
+              >
+                <Text style={styles.linkText}>← Volver a Iniciar Sesión</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.background },
+  scrollContainer: { flexGrow: 1 },
   container: {
     flex: 1,
     paddingHorizontal: 20,

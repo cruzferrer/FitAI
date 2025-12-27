@@ -93,7 +93,9 @@ export const useHomeScreenData = () => {
   );
 
   // --- Handlers ---
-  const handleSearch = () => Alert.alert("Búsqueda", "Pendiente.");
+  const handleSearch = () => {
+    router.push("/search");
+  };
   const handleNotifications = () => Alert.alert("Notificaciones", "Pendiente.");
 
   const handleLogout = async () => {
